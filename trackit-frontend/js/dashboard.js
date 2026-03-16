@@ -626,6 +626,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return base;
     }
 
+    function getOfficesApiBase() {
+        const host = window.location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:4000/api';
+        return 'https://trackit-system.onrender.com/api';
+    }
+
     function getAuthHeaders() {
         const user = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
         const headers = {};
@@ -1876,7 +1882,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         async function ensureOfficesLoaded() {
             if (offices.length > 0) return offices;
             try {
-                const res = await fetch('http://localhost:4000/api/offices');
+                const res = await fetch(`${getOfficesApiBase()}/offices`);
                 const data = await res.json();
                 offices = Array.isArray(data) ? data.filter(o => o.is_active !== false) : [];
             } catch (err) {
@@ -3729,7 +3735,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Add after documentTypes and loadDocumentTypes
     async function populateOutgoingOfficeDropdown() {
         try {
-            const res = await fetch('http://localhost:4000/api/offices');
+            const res = await fetch(`${getOfficesApiBase()}/offices`);
             const officesData = await res.json();
             const user = window.loggedInUser || JSON.parse(localStorage.getItem('loggedInUser') || '{}');
             const myOfficeId = String(user?.office_id?._id || user?.office_id || '');
