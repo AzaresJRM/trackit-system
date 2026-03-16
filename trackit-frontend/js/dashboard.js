@@ -3137,7 +3137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                             try {
                                 // #region agent log
-                                fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'92a532'},body:JSON.stringify({sessionId:'92a532',runId:'run1',hypothesisId:'H1',location:'dashboard.js:outgoingSubmit:beforeUpload',message:'new outgoing upload request',data:{docId:String(docId||''),fileCount:files.length,uploadUrl:`http://localhost:4000/api/documents/${docId}/attachments`,hasAuthHeader:false},timestamp:Date.now()})}).catch(()=>{});
+                                fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'92a532'},body:JSON.stringify({sessionId:'92a532',runId:'run1',hypothesisId:'H1',location:'dashboard.js:outgoingSubmit:beforeUpload',message:'new outgoing upload request',data:{docId:String(docId||''),fileCount:files.length,uploadUrl:`${getApiBase()}/documents/${docId}/attachments`,hasAuthHeader:false},timestamp:Date.now()})}).catch(()=>{});
                                 // #endregion
                                 const uploadRes = await fetch(`${getApiBase()}/documents/${docId}/attachments`, {
                                     method: 'POST',
