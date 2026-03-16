@@ -47,8 +47,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const host = window.location.hostname;
         const apiBase = (host === 'localhost' || host === '127.0.0.1')
-            ? 'http://localhost:4000/api'
-            : `${window.location.origin}/api`;
+        ? 'http://localhost:4000/api'
+        : 'https://trackit-system.onrender.com/api';
 
         function setForcePasswordMessage(message, isError = false) {
             forceMessage.textContent = message || '';
