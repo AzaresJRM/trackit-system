@@ -660,8 +660,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     function resolveAttachmentUrl(rawUrl) {
         const url = String(rawUrl || '').trim();
         if (!url) return '';
-        if (/^(https?:\/\/|data:|blob:)/i.test(url)) return url;
         const serverBase = getServerBase();
+        if (/^https?:\/\//i.test(url)) {
+            try {
+                const parsed = new URL(url);
+                if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+                    const rewritten = new URL(serverBase);
+                    rewritten.pathname = parsed.pathname;
+                    rewritten.search = parsed.search;
+                    rewritten.hash = parsed.hash;
+                    return rewritten.toString();
+                }
+                return url;
+            } catch (_) {
+                return url;
+            }
+        }
+        if (/^(data:|blob:)/i.test(url)) return url;
         if (url.startsWith('/')) return `${serverBase}${url}`;
         return `${serverBase}/${url.replace(/^\/+/, '')}`;
     }
