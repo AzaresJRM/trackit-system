@@ -653,14 +653,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `${url}${separator}access_token=${encodeURIComponent(token)}`;
     }
 
+    function getServerBase() {
+        return getApiBase().replace(/\/api$/, '');
+    }
+
+    function resolveAttachmentUrl(rawUrl) {
+        const url = String(rawUrl || '').trim();
+        if (!url) return '';
+        if (/^(https?:\/\/|data:|blob:)/i.test(url)) return url;
+        const serverBase = getServerBase();
+        if (url.startsWith('/')) return `${serverBase}${url}`;
+        return `${serverBase}/${url.replace(/^\/+/, '')}`;
+    }
+
     function normalizeAttachmentUrls(att) {
-        const previewUrl = att.previewUrl || att.url || '';
-        const downloadUrl = att.downloadUrl || att.url || '';
+        const previewUrl = resolveAttachmentUrl(att.previewUrl || att.url || '');
+        const downloadUrl = resolveAttachmentUrl(att.downloadUrl || att.url || '');
+        const fallbackUrl = resolveAttachmentUrl(att.url || downloadUrl || previewUrl || '');
         return {
             ...att,
             previewUrl: withAttachmentToken(previewUrl),
             downloadUrl: withAttachmentToken(downloadUrl),
-            url: withAttachmentToken(att.url || downloadUrl || previewUrl || '')
+            url: withAttachmentToken(fallbackUrl)
         };
     }
 
