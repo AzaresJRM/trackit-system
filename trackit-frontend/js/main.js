@@ -28,9 +28,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordResetFeedback = document.getElementById('passwordResetFeedback');
     const passwordResetCancelBtn = document.getElementById('passwordResetCancelBtn');
     const passwordResetSubmitBtn = document.getElementById('passwordResetSubmitBtn');
-    const API_BASE = 'https://trackit-system.onrender.com/api';
+    function getApiBase() {
+        const host = window.location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1') {
+            return 'http://localhost:4000/api';
+        }
+        return 'https://trackit-system.onrender.com/api';
+    }
     // #region agent log
-    fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H5',location:'main.js:API_BASE',message:'Main API base constant',data:{host:String(window.location.hostname||''),apiBase:API_BASE},timestamp:Date.now()})}).catch(()=>{});
+    fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H5',location:'main.js:API_BASE',message:'Main API base constant',data:{host:String(window.location.hostname||''),apiBase:getApiBase()},timestamp:Date.now()})}).catch(()=>{});
     // #endregion
     
     function closePasswordResetModal() {
@@ -89,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                await fetch(`${API_BASE}/auth/password-reset-request`, {
+                await fetch(`${getApiBase()}/auth/password-reset-request`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -127,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             try {
                 // Call backend API for login
-                const response = await fetch(`${API_BASE}/login`, {
+                const response = await fetch(`${getApiBase()}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })

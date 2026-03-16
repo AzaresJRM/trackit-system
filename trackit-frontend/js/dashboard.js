@@ -45,10 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return false;
         }
 
-        const host = window.location.hostname;
-        const apiBase = (host === 'localhost' || host === '127.0.0.1')
-        ? 'http://localhost:4000/api'
-        : 'https://trackit-system.onrender.com/api';
+        const apiBase = getApiBase();
 
         function setForcePasswordMessage(message, isError = false) {
             forceMessage.textContent = message || '';
@@ -622,39 +619,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     function getApiBase() {
         const host = window.location.hostname;
         if (host === 'localhost' || host === '127.0.0.1') {
-            const base = 'http://localhost:4000/api';
-            // #region agent log
-            fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H1',location:'dashboard.js:getApiBase:local',message:'Resolved getApiBase local',data:{host:String(host||''),origin:String(window.location.origin||''),base},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
-            // #region agent log
-            fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'220726'},body:JSON.stringify({sessionId:'220726',runId:'run1',hypothesisId:'H1',location:'dashboard.js:getApiBase:local',message:'resolved api base for local host',data:{host:String(host||''),origin:String(window.location.origin||''),base},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
-            return base;
+            return 'http://localhost:4000/api';
         }
-        const base = `${window.location.origin}/api`;
-        // #region agent log
-        fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H1',location:'dashboard.js:getApiBase:remote',message:'Resolved getApiBase remote',data:{host:String(host||''),origin:String(window.location.origin||''),base},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-        // #region agent log
-        fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'220726'},body:JSON.stringify({sessionId:'220726',runId:'run1',hypothesisId:'H1',location:'dashboard.js:getApiBase:remote',message:'resolved api base for non-local host',data:{host:String(host||''),origin:String(window.location.origin||''),base},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-        return base;
+        return 'https://trackit-system.onrender.com/api';
     }
 
     function getOfficesApiBase() {
-        const host = window.location.hostname;
-        if (host === 'localhost' || host === '127.0.0.1') {
-            const base = 'http://localhost:4000/api';
-            // #region agent log
-            fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H3',location:'dashboard.js:getOfficesApiBase:local',message:'Resolved getOfficesApiBase local',data:{host:String(host||''),base},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
-            return base;
-        }
-        const base = 'https://trackit-system.onrender.com/api';
-        // #region agent log
-        fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H3',location:'dashboard.js:getOfficesApiBase:remote',message:'Resolved getOfficesApiBase remote',data:{host:String(host||''),base},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-        return base;
+        return getApiBase();
     }
 
     function getAuthHeaders() {
@@ -1158,7 +1129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         recent = false,
         recentMode = 'both'
     }) {
-        let url = 'http://localhost:4000/api/documents/search?';
+        let url = `${getApiBase()}/documents/search?`;
         const params = [];
         if (code) params.push(`document_code=${encodeURIComponent(code)}`);
         if (keyword) params.push(`q=${encodeURIComponent(keyword)}`);
@@ -1285,7 +1256,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     async function fetchDocumentTimeline(docId) {
-        const res = await fetch(`http://localhost:4000/api/documents/${docId}/timeline`);
+        const res = await fetch(`${getApiBase()}/documents/${docId}/timeline`);
         const payload = await res.json();
         if (!res.ok) throw new Error(payload?.error || 'Unable to fetch timeline');
         return payload;
@@ -1602,7 +1573,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 params.set('fromDate', fromDate);
                 params.set('toDate', toDate);
             }
-            const res = await fetch(`http://localhost:4000/api/reports/my-office?${params.toString()}`, { headers });
+            const res = await fetch(`${getApiBase()}/reports/my-office?${params.toString()}`, { headers });
             const payload = await res.json();
             if (!res.ok) throw new Error(payload.message || 'Failed to load office report.');
 
@@ -2080,7 +2051,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const user = JSON.parse(localStorage.getItem('loggedInUser'));
                     const myUserId = user._id;
                     const myOfficeId = user.office_id?._id || user.office_id;
-                    const res = await fetch(`http://localhost:4000/api/documents/${doc._id}/action`, {
+                    const res = await fetch(`${getApiBase()}/documents/${doc._id}/action`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -2171,7 +2142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 statusMsg.textContent = 'Completing document...';
 
                 try {
-                    const res = await fetch(`http://localhost:4000/api/documents/${doc._id}/complete`, {
+                    const res = await fetch(`${getApiBase()}/documents/${doc._id}/complete`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -2234,7 +2205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             actionInFlightByDoc.add(docId);
             try {
-                const res = await fetch(`http://localhost:4000/api/documents/${docId}/action`, {
+                const res = await fetch(`${getApiBase()}/documents/${docId}/action`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -3021,7 +2992,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const ok = confirm('Cancel this outgoing document? This will remove it from other offices\' incoming queue as well.');
             if (!ok) return;
             try {
-                const res = await fetch(`http://localhost:4000/api/documents/${docId}`, {
+                const res = await fetch(`${getApiBase()}/documents/${docId}`, {
                     method: 'DELETE',
                     headers: getAuthHeaders()
                 });
@@ -3168,7 +3139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 // #region agent log
                                 fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'92a532'},body:JSON.stringify({sessionId:'92a532',runId:'run1',hypothesisId:'H1',location:'dashboard.js:outgoingSubmit:beforeUpload',message:'new outgoing upload request',data:{docId:String(docId||''),fileCount:files.length,uploadUrl:`http://localhost:4000/api/documents/${docId}/attachments`,hasAuthHeader:false},timestamp:Date.now()})}).catch(()=>{});
                                 // #endregion
-                                const uploadRes = await fetch(`http://localhost:4000/api/documents/${docId}/attachments`, {
+                                const uploadRes = await fetch(`${getApiBase()}/documents/${docId}/attachments`, {
                                     method: 'POST',
                                     headers: getAuthHeaders(),
                                     body: formData
@@ -3661,7 +3632,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (remarks === null) return;
         actionInFlightByDoc.add(docId);
         try {
-            const res = await fetch(`http://localhost:4000/api/documents/${docId}/action`, {
+            const res = await fetch(`${getApiBase()}/documents/${docId}/action`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -3702,7 +3673,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (remarks === null) return;
         actionInFlightByDoc.add(docId);
         try {
-            const res = await fetch(`http://localhost:4000/api/documents/${docId}/action`, {
+            const res = await fetch(`${getApiBase()}/documents/${docId}/action`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -3876,4 +3847,4 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderCompleteCards();
         }
     }
-})();
+});
