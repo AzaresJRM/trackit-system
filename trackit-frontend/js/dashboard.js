@@ -3111,7 +3111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     status: 'RELEASED'
                 });
                 // Send to backend
-                const response = await fetch('http://localhost:4000/api/documents', {
+                const response = await fetch(`${getOfficesApiBase()}/documents`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -3332,7 +3332,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadDocumentTypes() {
         try {
-            const res = await fetch('http://localhost:4000/api/document-types');
+            const res = await fetch(`${getOfficesApiBase()}/document-types`);
             if (!res.ok) throw new Error('Failed to load document types');
             documentTypes = await res.json();
             // #region agent log
