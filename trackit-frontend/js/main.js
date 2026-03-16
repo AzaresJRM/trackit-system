@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordResetCancelBtn = document.getElementById('passwordResetCancelBtn');
     const passwordResetSubmitBtn = document.getElementById('passwordResetSubmitBtn');
     const API_BASE = 'https://trackit-system.onrender.com/api';
+    // #region agent log
+    fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H5',location:'main.js:API_BASE',message:'Main API base constant',data:{host:String(window.location.hostname||''),apiBase:API_BASE},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     
     function closePasswordResetModal() {
         if (!passwordResetModal) return;

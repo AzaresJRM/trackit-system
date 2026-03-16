@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9cc7bf'},body:JSON.stringify({sessionId:'9cc7bf',runId:'run1',hypothesisId:'H5',location:'js/admin_dashboard.js:2',message:'admin dashboard script loaded',data:{href:window.location.href},timestamp:Date.now()})}).catch(()=>{});
     // #endregion
     const API_BASE = 'https://trackit-system.onrender.com/api';
+    // #region agent log
+    fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H5',location:'admin_dashboard.js:API_BASE',message:'Admin API base constant',data:{host:String(window.location.hostname||''),apiBase:API_BASE},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
 
     const topBarTitle = document.querySelector('.top-bar-title');
     const sidebarLinks = document.querySelectorAll('.sidebar-nav li');
