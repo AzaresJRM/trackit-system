@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | TrackIT</title>
+    <link rel="stylesheet" href="css/admin_dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="admin-dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-cogs"></i>
+                <span class="sidebar-title">Admin Panel</span>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="active"><i class="fas fa-users"></i> Manage Users</li>
+                    <li><i class="fas fa-building"></i> Offices</li>
+                    <li><i class="fas fa-unlock-alt"></i> Password Reset Requests</li>
+                    <li><i class="fas fa-cog"></i> Settings</li>
+                    <li><a href="#" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="top-bar-title">Manage Users</div>
+                <div class="top-bar-user">
+                    <i class="fas fa-user-circle"></i> Admin
+                </div>
+            </header>
+            <section class="users-section section-panel" style="display:none;">
+                <div class="section-header">
+                    <h2>Manage Users</h2>
+                    <button id="addUserBtn" class="panel-action-btn">Add User</button>
+                </div>
+                <table id="usersTable" class="main-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Office</th>
+                            <th>Role</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+            <section class="offices-section section-panel" style="display:none;">
+                <div class="section-header">
+                    <h2>Offices</h2>
+                    <button id="addOfficeBtn" class="panel-action-btn">Add Office</button>
+                </div>
+                <table id="officesTable" class="main-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Description</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+            <section class="reset-requests-section section-panel" style="display:none;">
+                <div class="section-header">
+                    <h2>Password Reset Requests</h2>
+                </div>
+                <div class="reset-requests-toolbar">
+                    <label for="resetRequestsStatusFilter">Status</label>
+                    <select id="resetRequestsStatusFilter">
+                        <option value="pending">Pending</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="all">All</option>
+                    </select>
+                    <button id="refreshResetRequestsBtn" class="panel-action-btn" type="button">Refresh</button>
+                </div>
+                <table id="resetRequestsTable" class="main-table">
+                    <thead>
+                        <tr>
+                            <th>Requested Identifier</th>
+                            <th>Linked Username</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Resolved</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+            <section class="settings-section section-panel" style="display:none;">
+                <div class="section-header">
+                    <h2>Settings</h2>
+                </div>
+                <div class="settings-cards-grid">
+                    <article class="settings-card" id="adminProfileCard">
+                        <h3><i class="fas fa-user-shield"></i> Admin Profile</h3>
+                        <div class="settings-kv"><span>Username</span><strong id="settingsAdminUsername">Admin</strong></div>
+                        <div class="settings-kv"><span>Role</span><strong id="settingsAdminRole">Administrator</strong></div>
+                    </article>
+
+                    <article class="settings-card" id="systemInfoCard">
+                        <h3><i class="fas fa-server"></i> System Info</h3>
+                        <div class="settings-kv"><span>App Version</span><strong>v1.0</strong></div>
+                        <div class="settings-kv"><span>Environment</span><strong>Local</strong></div>
+                        <div class="settings-kv"><span>API Base URL</span><strong id="settingsApiBase">Not available</strong></div>
+                        <div class="settings-kv"><span>Backend Status</span><strong
+                                id="settingsBackendStatus">Status: Not available (future enhancement)</strong></div>
+                    </article>
+
+                    <article class="settings-card" id="securityNotesCard">
+                        <h3><i class="fas fa-shield-alt"></i> Security &amp; Notes</h3>
+                        <ul class="settings-bullets">
+                            <li>Use strong passwords and avoid reuse across systems.</li>
+                            <li>Change admin credentials regularly and after staff turnover.</li>
+                            <li>Limit admin access to authorized personnel only.</li>
+                        </ul>
+                    </article>
+
+                    <article class="settings-card" id="passwordSettingsCard">
+                        <h3><i class="fas fa-key"></i> Change My Password</h3>
+                        <form id="adminSelfPasswordForm" class="admin-password-form">
+                            <label for="adminCurrentPassword">Current Password</label>
+                            <input type="password" id="adminCurrentPassword" autocomplete="current-password" required>
+                            <label for="adminNewPassword">New Password</label>
+                            <input type="password" id="adminNewPassword" autocomplete="new-password" minlength="8" required>
+                            <button type="submit" class="panel-action-btn">Update Password</button>
+                        </form>
+                        <p id="adminSelfPasswordMessage" class="admin-password-message"></p>
+                    </article>
+                </div>
+            </section>
+        </main>
+    </div>
+    <div id="addUserModal" class="admin-modal" style="display:none;">
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h3>Add User</h3>
+                <button type="button" id="closeAddUserModalBtn" class="admin-modal-close" aria-label="Close Add User form">&times;</button>
+            </div>
+            <form id="addUserForm" class="admin-modal-form">
+                <label for="addUserUsername">Username</label>
+                <input type="text" id="addUserUsername" autocomplete="off" required>
+
+                <label for="addUserPassword">Temporary Password</label>
+                <input type="password" id="addUserPassword" minlength="8" autocomplete="new-password" required>
+
+                <label for="addUserRole">Role</label>
+                <select id="addUserRole" required>
+                    <option value="USER">USER</option>
+                    <option value="ADMIN">ADMIN</option>
+                </select>
+
+                <label for="addUserOfficeSelect">Office</label>
+                <select id="addUserOfficeSelect" required></select>
+
+                <div class="admin-modal-actions">
+                    <button type="button" id="cancelAddUserBtn" class="panel-action-btn admin-modal-secondary">Cancel</button>
+                    <button type="submit" class="panel-action-btn">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="js/admin_dashboard.js"></script>
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="modal"
+        style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);z-index:999;align-items:center;justify-content:center;">
+        <div class="modal-content"
+            style="background:#fff;padding:32px 32px 24px 32px;border-radius:12px;max-width:340px;width:96%;box-shadow:0 8px 32px rgba(44,62,80,0.18),0 1.5px 6px rgba(44,62,80,0.10);text-align:center;">
+            <p style="margin-bottom: 24px; font-size: 1.1em;">Are you sure you want to log out?</p>
+            <div style="display:flex;gap:16px;justify-content:center;">
+                <button id="cancelLogout"
+                    style="background:#e5e7eb;color:#222;padding:8px 18px;border-radius:6px;border:none;">Cancel</button>
+                <button id="confirmLogout"
+                    style="background:#2563eb;color:#fff;padding:8px 18px;border-radius:6px;border:none;">Logout</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

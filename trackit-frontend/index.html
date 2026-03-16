@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Tracking System | DTS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-left">
+            <img src="images/track_it.png" alt="TrackIT Logo" class="dts-logo-left">
+            <div class="login-left-text">
+                <div class="trackit-title-left">TrackIT</div>
+                <div class="trackit-subtitle-left">Document Tracking System</div>
+            </div>
+        </div>
+        <div class="login-right">
+            <form class="login-form">
+                <input type="text" placeholder="24-0000" id="username">
+                <input type="password" placeholder="Password" id="password">
+                <button type="submit" id="signInButton">Sign In</button>
+                <a href="#" class="forgot-password">Forgot password?</a>
+            </form>
+        </div>      
+    </div>
+    <div id="passwordResetModal" class="auth-modal hidden" aria-hidden="true">
+        <div class="auth-modal-content">
+            <h3>Request Password Reset</h3>
+            <form id="passwordResetForm">
+                <label for="resetIdentifierInput">Office Username</label>
+                <input type="text" id="resetIdentifierInput" placeholder="Enter your username" required>
+                <label for="resetMessageInput">Reason (optional)</label>
+                <textarea id="resetMessageInput" placeholder="Add an optional note to Admin"></textarea>
+                <p id="passwordResetFeedback" class="auth-modal-feedback" aria-live="polite"></p>
+                <div class="auth-modal-actions">
+                    <button type="button" id="passwordResetCancelBtn" class="auth-secondary-btn">Cancel</button>
+                    <button type="submit" id="passwordResetSubmitBtn">Send Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="js/main.js"></script>
+</body>
+</html> 

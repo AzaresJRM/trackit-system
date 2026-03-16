@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Tracking System | User Dashboard</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="dts-dashboard-logo">
+                    <i class="fas fa-project-diagram"></i>
+                    <div>
+                        <div class="dts-text-top">TrackIT</div>
+                        <div class="dts-text-bottom">Document Tracking System</div>
+                    </div>
+                </div>
+            </div>
+            <div class="user-profile">
+                <i class="fas fa-user-circle user-avatar-icon"></i>
+                <div class="user-info">
+                    <div class="user-name"></div>
+                </div>
+            </div>
+            <div class="modules">
+                <div class="module-title">MODULES</div>
+                <ul>
+                    <li><a href="#" class="nav-link" data-section="incoming"><i class="fas fa-inbox"></i> Incoming <span
+                                class="badge">0</span></a></li>
+                    <li><a href="#" class="nav-link" data-section="received"><i class="fas fa-envelope-open"></i>
+                            Received <span class="badge">0</span></a></li>
+                    <li><a href="#" class="nav-link" data-section="outgoing"><i class="fas fa-share-square"></i>
+                            Outgoing <span class="badge">0</span></a></li>
+                    <li><a href="#" class="nav-link" data-section="complete"><i class="fas fa-check-circle"></i>
+                            Complete <span class="badge">0</span></a></li>
+                    <li><a href="#" class="nav-link" data-section="logs"><i class="fas fa-clipboard-list"></i> Logs
+                            <span class="badge">0</span></a></li>
+                    <li><a href="#" class="nav-link" data-section="track"><i class="fas fa-search"></i> Reports</a></li>
+                </ul>
+            </div>
+            <div class="settings">
+                <div class="module-title">SETTINGS</div>
+                <ul>
+                    <li><a href="#"><i class="fas fa-key"></i> Change Password</a></li>
+                    <li><a href="#" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="top-bar">
+                <i class="fas fa-bars"></i>
+                <div class="topbar-actions">
+                    <button id="notificationsBellBtn" class="notifications-bell-btn" type="button" aria-label="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span id="notificationsUnreadBadge" class="notifications-unread-badge" style="display:none;">0</span>
+                    </button>
+                    <div id="notificationsDropdown" class="notifications-dropdown" style="display:none;">
+                        <div class="notifications-dropdown-header">
+                            <strong>Notifications</strong>
+                            <button id="markNotificationsSeenBtn" type="button" class="notifications-mark-seen-btn">Mark all seen</button>
+                        </div>
+                        <div id="notificationsList" class="notifications-list">
+                            <div class="notifications-empty">No notifications yet.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Overview Cards -->
+            <div class="dashboard-overview">
+                <div class="overview-card" id="track-documents-card">
+                    <div class="overview-icon" style="background: #2563eb;">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="overview-content">
+                        <h3 style="font-weight: bold; color: #2563eb; font-size: 1.2em;">Track Documents</h3>
+                    </div>
+                </div>
+                <div class="overview-card" id="incoming-documents-card">
+                    <div class="overview-icon incoming">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <div class="overview-content">
+                        <h3>Incoming Documents</h3>
+                        <div class="overview-number"><span id="incoming-docs-count">0</span></div>
+                    </div>
+                </div>
+                <div class="overview-card" id="received-documents-card">
+                    <div class="overview-icon received">
+                        <i class="fas fa-envelope-open"></i>
+                    </div>
+                    <div class="overview-content">
+                        <h3>Received Documents</h3>
+                        <div class="overview-number"><span id="received-docs-count">0</span></div>
+                    </div>
+                </div>
+                <div class="overview-card" id="outgoing-documents-card">
+                    <div class="overview-icon outgoing">
+                        <i class="fas fa-share-square"></i>
+                    </div>
+                    <div class="overview-content">
+                        <h3>Outgoing Documents</h3>
+                        <div class="overview-number"><span id="outgoing-docs-count">0</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Incoming Documents Section -->
+            <div class="content-section incoming-section" id="incoming-section" style="display:none;">
+                <div class="content-header">
+                    <h2>Incoming Documents</h2>
+                </div>
+                <div class="filter-controls">
+                    <div class="filter-left">
+                        <label for="incoming-show-entries">Show</label>
+                        <select id="incoming-show-entries">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>entries</span>
+                    </div>
+                    <div class="search-box">
+                        <label for="incoming-search-input">Search:</label>
+                        <input type="text" id="incoming-search-input" placeholder="Search incoming documents...">
+                    </div>
+                </div>
+                <div class="table-container" id="incoming-container">
+                    <table class="section-table">
+                        <thead>
+                            <tr>
+                                <th>Document Code</th>
+                                <th>From Office</th>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Updated</th>
+                                <th>Remarks</th>
+                                <th>Attachments</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="incoming-table-body">
+                            <!-- Incoming rows will be rendered here by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-info">
+                    Showing 1 to 1 of 1 entries
+                </div>
+                <div class="pagination-controls">
+                    <button class="prev-btn">Previous</button>
+                    <button class="page-btn active">1</button>
+                    <button class="next-btn">Next</button>
+                </div>
+            </div>
+
+            <!-- Received Documents Section -->
+            <div class="content-section received-section" id="received-section" style="display:none;">
+                <div class="content-header">
+                    <h2>Received Documents</h2>
+                </div>
+                <div class="filter-controls">
+                    <div class="filter-left">
+                        <label for="received-show-entries">Show</label>
+                        <select id="received-show-entries">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>entries</span>
+                    </div>
+                    <div class="search-box">
+                        <label for="received-search-input">Search:</label>
+                        <input type="text" id="received-search-input" placeholder="Search received documents...">
+                    </div>
+                </div>
+                <div class="table-container" id="received-container">
+                    <table class="section-table">
+                        <thead>
+                            <tr>
+                                <th>Document Code</th>
+                                <th>Requisitioner</th>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Received At</th>
+                                <th>Attachments</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="received-table-body">
+                            <!-- Received rows will be rendered here by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-info">
+                    Showing 1 to 2 of 2 entries
+                </div>
+                <div class="pagination-controls">
+                    <button class="prev-btn">Previous</button>
+                    <button class="page-btn active">1</button>
+                    <button class="next-btn">Next</button>
+                </div>
+            </div>
+
+            <!-- Outgoing Documents Section -->
+            <div class="content-section outgoing-section" id="outgoing-section" style="display:none;">
+                <div class="content-header">
+                    <h2>Outgoing Documents</h2>
+                </div>
+                <div class="filter-controls">
+                    <div class="filter-left">
+                        <label for="outgoing-show-entries">Show</label>
+                        <select id="outgoing-show-entries">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>entries</span>
+                        <button id="outgoing-new-doc-btn"
+                            style="margin-left: 12px; background: #27ae60; color: #fff; border: none; border-radius: 6px; padding: 6px 16px; font-weight: 500; cursor: pointer;">+
+                            New Document</button>
+                    </div>
+                    <div class="search-box">
+                        <label for="outgoing-search-input">Search:</label>
+                        <input type="text" id="outgoing-search-input" placeholder="Search outgoing documents...">
+                    </div>
+                </div>
+                <div class="outgoing-table-container" id="outgoing-container">
+                    <table class="outgoing-table">
+                        <thead>
+                            <tr>
+                                <th>Document Code</th>
+                                <th>Type</th>
+                                <th>Title</th>
+                                <th>Destination Office</th>
+                                <th>Status</th>
+                                <th>Forwarded Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="outgoing-table-body">
+                            <!-- Outgoing rows will be rendered here by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-info">
+                    Showing 1 to 1 of 1 entries
+                </div>
+                <div class="pagination-controls">
+                    <button class="prev-btn">Previous</button>
+                    <button class="page-btn active">1</button>
+                    <button class="next-btn">Next</button>
+                </div>
+            </div>
+
+            <!-- Outgoing New Document Modal -->
+            <div id="outgoingNewDocModal" class="modal" style="display:none;">
+                <div class="modal-content"
+                    style="max-width:420px;width:96%;border-radius:16px;box-shadow:0 8px 32px rgba(44,62,80,0.18),0 1.5px 6px rgba(44,62,80,0.10);padding:32px 32px 24px 32px;">
+                    <h2 style="margin-top:0;margin-bottom:20px;font-size:1.2em;font-weight:700;color:#222;">New Outgoing
+                        Document</h2>
+                    <form id="outgoingNewDocForm">
+                        <label>Title <span style="color:red;">*</span></label>
+                        <input type="text" id="outgoingDocTitle" required style="width:100%;margin-bottom:10px;">
+                        <label>Type <span style="color:red;">*</span></label>
+                        <select id="outgoingDocType" required style="width:100%;margin-bottom:10px;">
+                            <option value="">-- Select Type --</option>
+                            <option value="Memo">Memo</option>
+                            <option value="Endorsement">Endorsement</option>
+                            <option value="Communication Letter">Communication Letter</option>
+                        </select>
+                        <label>Content/Description</label>
+                        <textarea id="outgoingDocContent" style="width:100%;margin-bottom:10px;"></textarea>
+                        <label>Forward to Office(s) <span style="color:red;">*</span></label>
+                        <select id="outgoingDocOffice" required multiple size="6" style="width:100%;margin-bottom:18px;">
+                            <!-- Options will be populated by JS -->
+                        </select>
+                        <div style="margin-top:-12px;margin-bottom:12px;font-size:0.85em;color:#666;">
+                            Hold Ctrl/Cmd to select multiple offices.
+                        </div>
+                        <label>Attachments <span style="color:red;">*</span> <span style="font-size:0.85em;color:#666;font-weight:normal;">(allowed: pdf, doc, docx, xlsx, png, jpg; 1-5 files, max 10MB each)</span></label>
+                        <input type="file" id="outgoingAttachment" multiple accept=".pdf,.doc,.docx,.xlsx,.png,.jpg,.jpeg"
+                            style="width:100%;margin-bottom:18px;">
+                        <div id="outgoingSelectedAttachmentsWrap" style="display:none;margin-top:-8px;margin-bottom:14px;">
+                            <div style="font-size:0.9em;color:#444;margin-bottom:6px;">Selected attachments</div>
+                            <div id="outgoingSelectedAttachmentsList"
+                                style="max-height:120px;overflow:auto;border:1px solid #e5e7eb;border-radius:8px;padding:8px;"></div>
+                        </div>
+                        <div style="margin-top: 20px; text-align: right;">
+                            <button type="button" id="outgoingNewDocCancel"
+                                style="background: #e74c3c; color: white; margin-right: 10px;">Cancel</button>
+                            <button type="submit" style="background: #27ae60; color: white;">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Complete Documents Section -->
+            <div class="content-section complete-section" id="complete-section" style="display:none;">
+                <div class="content-header">
+                    <h2>Complete Documents</h2>
+                </div>
+                <div class="filter-controls">
+                    <div class="filter-left">
+                        <label for="complete-show-entries">Show</label>
+                        <select id="complete-show-entries">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>entries</span>
+                    </div>
+                    <div class="search-box">
+                        <label for="complete-search-input">Search:</label>
+                        <input type="text" id="complete-search-input" placeholder="Search complete documents...">
+                    </div>
+                </div>
+                <div class="table-container" id="complete-container">
+                    <table class="section-table">
+                        <thead>
+                            <tr>
+                                <th>Document Code</th>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Completed At</th>
+                                <th>Completed By</th>
+                                <th>Remarks</th>
+                                <th>Attachments</th>
+                            </tr>
+                        </thead>
+                        <tbody id="complete-table-body">
+                            <!-- Complete rows will be rendered here by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-info">
+                    Showing 0 to 0 of 0 entries
+                </div>
+                <div class="pagination-controls">
+                    <button class="prev-btn">Previous</button>
+                    <button class="next-btn">Next</button>
+                </div>
+            </div>
+
+            <!-- Logs Section -->
+            <div class="content-section logs-section reports-section" id="logs-section" style="display:none;">
+                <div class="content-header">
+                    <h2>Reports</h2>
+                    <button id="logsPrintBtn" class="refresh-btn"><i class="fas fa-print"></i> Print / Export PDF</button>
+                </div>
+                <div class="filter-controls logs-report-filter-controls">
+                    <div class="filter-left logs-report-filters">
+                        <label for="logsDatePreset">Date Range</label>
+                        <select id="logsDatePreset">
+                            <option value="last7">Last 7 Days</option>
+                            <option value="last30">Last 30 Days</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                        <div id="logsCustomRange" class="logs-custom-range" style="display:none;">
+                            <label for="logsDateFrom">From</label>
+                            <input type="date" id="logsDateFrom">
+                            <label for="logsDateTo">To</label>
+                            <input type="date" id="logsDateTo">
+                        </div>
+                    </div>
+                    <div class="logs-report-bucket-tabs" role="tablist" aria-label="Report Scope">
+                        <button id="logsCreatedTabBtn" type="button" class="logs-report-tab is-active" data-report-tab="created" role="tab" aria-selected="true">Created by my Office</button>
+                        <button id="logsHandledTabBtn" type="button" class="logs-report-tab" data-report-tab="handled" role="tab" aria-selected="false">Handled by my Office</button>
+                    </div>
+                    <div class="actions">
+                        <button id="logsApplyFilterBtn"><i class="fas fa-filter"></i> Apply</button>
+                    </div>
+                </div>
+                <div id="logsReportMessage" class="logs-report-message" style="display:none;"></div>
+                <div id="logsReportPrintableArea" class="logs-report-print-area">
+                    <div class="logs-report-header">
+                        <h3>TrackIT Document Tracking System</h3>
+                        <div class="logs-report-meta">
+                            <div><strong>Office:</strong> <span id="logsHeaderOffice">-</span></div>
+                            <div><strong>Date Range:</strong> <span id="logsHeaderDateRange">-</span></div>
+                            <div><strong>Scope:</strong> <span id="logsHeaderScope">Created by my Office</span></div>
+                            <div><strong>Generated:</strong> <span id="logsHeaderGeneratedAt">-</span></div>
+                        </div>
+                    </div>
+                    <div id="log-container" class="logs-report-documents">
+                        <!-- Dynamic report documents rendered by js/dashboard.js -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Track Section -->
+            <div class="content-section track-section" id="track-section" style="display:none;">
+                <div class="content-header">
+                    <h2>Logs</h2>
+                </div>
+                <div class="track-panel">
+                    <div class="track-search-bar">
+                        <div class="track-field track-field-code">
+                            <label for="track-doc-code">Document Code</label>
+                            <input type="text" id="track-doc-code" placeholder="Enter document code">
+                        </div>
+                        <div class="track-field">
+                            <label for="track-keyword">Keyword / Title</label>
+                            <input type="text" id="track-keyword" placeholder="Search by title or keyword">
+                        </div>
+                        <div class="track-field">
+                            <label for="track-status">Status</label>
+                            <select id="track-status">
+                                <option value="">All Statuses</option>
+                                <option value="released">Forwarded</option>
+                                <option value="received">Received</option>
+                                <option value="on_hold">On Hold</option>
+                                <option value="declined">Declined</option>
+                                <option value="completed">Completed</option>
+                                <option value="draft">Draft</option>
+                            </select>
+                        </div>
+                        <div class="track-field">
+                            <label for="track-date-preset">Date Range</label>
+                            <select id="track-date-preset">
+                                <option value="">All Dates</option>
+                                <option value="today">Today</option>
+                                <option value="last7">Last 7 Days</option>
+                                <option value="last30">Last 30 Days</option>
+                            </select>
+                        </div>
+                        <div class="track-actions">
+                            <button id="track-search-btn" class="track-btn primary">Search</button>
+                            <button id="track-clear-btn" class="track-btn ghost">Clear</button>
+                        </div>
+                        <label class="track-toggle">
+                            <input type="checkbox" id="track-mock-toggle">
+                            <span>Test Mode</span>
+                        </label>
+                    </div>
+                    <div id="track-feedback" class="track-feedback"></div>
+                    <div class="track-feedback">
+                        Sample forward flow: create an outgoing document, receive it in destination office, then forward it to another office. Keep this page open with the document code to see live status updates.
+                    </div>
+                </div>
+                <div class="track-recent-panel">
+                    <div class="track-recent-header">
+                        <h3>Recent Documents</h3>
+                    </div>
+                    <div class="track-recent-tabs">
+                        <button id="track-recent-created-tab" class="track-recent-tab active" type="button">Created by my office</button>
+                        <button id="track-recent-handled-tab" class="track-recent-tab" type="button">Handled by my office</button>
+                    </div>
+                    <div id="track-recent-list" class="track-recent-list"></div>
+                </div>
+                <div id="track-results-table-container" class="track-results-table-container"></div>
+                <div id="track-results" class="track-results"></div>
+            </div>
+
+            <div class="dashboard-footer">
+                <p>Developed by 4 J's Assist.</p>
+                <p>Version 1.0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <p style="margin-bottom: 24px; font-size: 1.1em; text-align: center;">Are you sure you want to log out?</p>
+            <div class="modal-buttons">
+                <button id="cancelLogout" class="btn-cancel">Cancel</button>
+                <button id="confirmLogout" class="btn-logout">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="forcePasswordChangeModal" class="modal force-password-modal" style="display:none;">
+        <div class="modal-content">
+            <h2><i class="fas fa-key"></i> Change Password Required</h2>
+            <p>Your temporary password must be changed before you can access modules.</p>
+            <form id="forcePasswordChangeForm">
+                <label for="forceCurrentPassword">Current Password</label>
+                <input type="password" id="forceCurrentPassword" autocomplete="current-password" required>
+                <label for="forceNewPassword">New Password</label>
+                <input type="password" id="forceNewPassword" autocomplete="new-password" minlength="8" required>
+                <label for="forceConfirmPassword">Confirm New Password</label>
+                <input type="password" id="forceConfirmPassword" autocomplete="new-password" minlength="8" required>
+                <p id="forcePasswordChangeMessage" class="force-password-message"></p>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-logout" style="background:#2563eb;">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Update Document Modal -->
+    <div id="updateDocumentModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h2><i class="fas fa-edit"></i> UPDATE DOCUMENTS</h2>
+            <form id="updateDocumentForm">
+                <label>REQUISITIONER <span style="color:red;">* required</span></label>
+                <input type="text" id="updateRequisitioner" required>
+                <label>TITLE <span style="color:red;">* required</span></label>
+                <input type="text" id="updateTitle" required>
+                <label>CONTENT <span style="color:red;">* required</span></label>
+                <textarea id="updateContent" required></textarea>
+                <label>TYPE <span style="color:red;">* required</span></label>
+                <select id="updateType" required>
+                    <option value="">-- Select Type --</option>
+                    <option value="COMMUNICATION LETTER">COMMUNICATION LETTER</option>
+                    <option value="PURCHASE REQUEST">PURCHASE REQUEST</option>
+                    <!-- Add more types as needed -->
+                </select>
+                <label>REMARKS</label>
+                <textarea id="updateRemarks"></textarea>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" id="cancelUpdateDoc"
+                        style="background: #e74c3c; color: white; margin-right: 10px;">CANCEL</button>
+                    <button type="submit" style="background: #27ae60; color: white;">UPDATE</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+
+</html>
