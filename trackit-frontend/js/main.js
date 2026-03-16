@@ -28,8 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordResetFeedback = document.getElementById('passwordResetFeedback');
     const passwordResetCancelBtn = document.getElementById('passwordResetCancelBtn');
     const passwordResetSubmitBtn = document.getElementById('passwordResetSubmitBtn');
-    const API_BASE = 'http://localhost:4000/api';
-
+    const API_BASE = 'https://trackit-system.onrender.com/api';
+    
     function closePasswordResetModal() {
         if (!passwordResetModal) return;
         passwordResetModal.classList.add('hidden');
