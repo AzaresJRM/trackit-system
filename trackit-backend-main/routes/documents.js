@@ -1508,7 +1508,9 @@ router.get('/search', async (req, res) => {
 // Get timeline/status history for a specific document
 router.get('/:id/timeline', async (req, res) => {
   try {
-    const doc = await Document.findByPk(req.params.id);
+    const doc = await Document.findByPk(req.params.id, {
+      include: [{ model: DocumentType, as: 'type', attributes: ['id', 'type_name'] }]
+    });
 
     if (!doc) return res.status(404).json({ error: 'Document not found' });
     // #region agent log
@@ -1546,6 +1548,9 @@ router.get('/:id/timeline', async (req, res) => {
     res.json({
       document_id: doc.id,
       document_code: doc.document_code,
+      title: doc.title,
+      content: doc.content ?? null,
+      type_name: doc.type ? doc.type.type_name : null,
       current_status: doc.status,
       status_phase: deriveStatusPhase(doc.status),
       timeline

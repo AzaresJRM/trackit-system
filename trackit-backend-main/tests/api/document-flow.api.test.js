@@ -230,8 +230,14 @@ describe('TrackIT document flow API', () => {
     const registrarIncoming = Array.isArray(registrarIncomingRes.body) ? registrarIncomingRes.body : [];
     expect(registrarIncoming.some((d) => d._id === doc._id)).toBe(true);
 
+    const incomingMatch = vpaaIncoming.find((d) => d._id === doc._id);
+    expect(incomingMatch?.content).toBe(doc.content);
+
     const timelineRes = await request(app).get(`/api/documents/${doc._id}/timeline`);
     expect(timelineRes.status).toBe(200);
+    expect(timelineRes.body.title).toBe(doc.title);
+    expect(timelineRes.body.content).toBe(doc.content);
+    expect(timelineRes.body.type_name).toBeTruthy();
     const timeline = Array.isArray(timelineRes.body.timeline) ? timelineRes.body.timeline : [];
     const forwardRows = timeline.filter((row) =>
       String(row.status || '').toUpperCase().includes('FORWARDED BY')

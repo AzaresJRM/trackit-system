@@ -1210,7 +1210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="track-doc-main">
                 <div><b>Code:</b> ${escapeHtml(doc.document_code || '-')}</div>
                 <div><b>Title:</b> ${escapeHtml(doc.title || '-')}${editedIndicator}</div>
-                <div><b>Type:</b> ${escapeHtml(doc.type_id?.type_name || '-')}</div>
+                <div><b>Type:</b> ${escapeHtml(doc.type_id?.type_name || doc.type_name || '-')}</div>
                 <div><b>Content/Description:</b> ${escapeHtml(doc.content || '-')}</div>
                 <div><b>Current Office:</b> ${escapeHtml(doc.current_office_id?.office_name || '-')}</div>
                 <div><b>Status:</b> <span class="${getStatusPillClass(doc.status)}">${escapeHtml(formatStatusForDisplay(doc.status))}</span></div>
@@ -1231,7 +1231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <tr>
                 <td>${escapeHtml(doc.document_code || '-')}</td>
                 <td>${escapeHtml(doc.title || '-')}${hasEditedLifecycleEvent(doc) ? ' <span class="edited-indicator">Edited</span>' : ''}</td>
-                <td>${escapeHtml(doc.type_id?.type_name || '-')}</td>
+                <td>${escapeHtml(doc.type_id?.type_name || doc.type_name || '-')}</td>
                 <td>${escapeHtml(doc.current_office_id?.office_name || '-')}</td>
                 <td><span class="${getStatusPillClass(doc.status)}">${escapeHtml(formatStatusForDisplay(doc.status))}</span></td>
                 <td><button class="track-view-btn" data-index="${i}">View</button> <button type="button" class="track-view-btn attachment-preview-btn" data-doc-id="${escapeHtml(doc._id || doc.id || '')}" data-doc-title="${escapeHtml(doc.title || doc.document_code || 'Document')}">👁 Preview</button></td>
@@ -1319,6 +1319,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const timelinePayload = await fetchDocumentTimeline(docId);
             const withTimeline = {
                 ...doc,
+                title: timelinePayload?.title ?? doc.title,
+                content: timelinePayload?.content ?? doc.content,
+                type_name: timelinePayload?.type_name ?? doc.type_id?.type_name ?? doc.type_name,
                 status: timelinePayload?.current_status || doc.status,
                 status_history: toTrackTimelineItems(timelinePayload)
             };
@@ -2377,7 +2380,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <strong>Requisitioner:</strong> ${doc.requisitioner || '-'}<br>
                         <strong>Title:</strong> ${doc.title || '-'}<br>
                         <strong>Type:</strong> ${doc.type_id?.type_name || '-'}<br>
-                        <strong>Content:</strong> ${doc.content || '-'}<br>
+                        <strong>Content/Description:</strong> ${doc.content || '-'}<br>
                         <strong>Status:</strong> ${doc.status || '-'}<br>
                     </div>
                     <div style="margin-bottom: 16px;">
@@ -3408,6 +3411,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.updateDashboardCounts) window.updateDashboardCounts();
     }
 
+    function openDocumentDetailReadonlyModal(doc, headingText) {
+        if (!doc) return;
+        let modal = document.getElementById('document-readonly-details-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'document-readonly-details-modal';
+            modal.className = 'modal';
+            modal.style.display = 'none';
+            document.body.appendChild(modal);
+        }
+        const heading = headingText || 'Document details';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width:480px;width:96%;border-radius:16px;box-shadow:0 8px 32px rgba(44,62,80,0.18),0 1.5px 6px rgba(44,62,80,0.10);padding:32px 32px 24px 32px;">
+                <h2 style="margin-top:0;margin-bottom:20px;font-size:1.2em;font-weight:700;color:#222;">${escapeHtml(heading)}</h2>
+                <div style="margin-bottom: 16px;line-height:1.75;">
+                    <div><strong>Code:</strong> ${escapeHtml(doc.document_code || '-')}</div>
+                    <div><strong>Title:</strong> ${escapeHtml(doc.title || '-')}</div>
+                    <div><strong>Type:</strong> ${escapeHtml(doc.type_id?.type_name || doc.type_name || '-')}</div>
+                    <div><strong>Content/Description:</strong> ${escapeHtml(doc.content || '-')}</div>
+                    <div><strong>Status:</strong> ${escapeHtml(formatStatusForDisplay(doc.status || '-'))}</div>
+                </div>
+                <div style="text-align:right;">
+                    <button type="button" class="btn-cancel" id="document-readonly-details-close" style="background:#f1f5f9;color:#222;">Close</button>
+                </div>
+            </div>
+        `;
+        modal.style.display = 'flex';
+        const close = () => { modal.style.display = 'none'; };
+        modal.querySelector('#document-readonly-details-close').onclick = close;
+        modal.onclick = (e) => {
+            if (e.target === modal) close();
+        };
+    }
+
     function renderIncomingCards(docs) {
         const tableBody = document.getElementById('incoming-table-body');
         if (!tableBody) return;
@@ -3436,10 +3473,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td class="attachments-cell"><button class="action-btn attachment-preview-btn" data-doc-id="${escapeHtml(docId)}" data-doc-title="${escapeHtml(doc.title || doc.document_code || 'Document')}">👁 Preview</button></td>
                     <td class="actions-cell">
                         ${getIncomingActionButtons(doc, docId)}
+                        <button type="button" class="action-btn incoming-doc-details-btn" data-doc-id="${escapeHtml(String(docId))}">Details</button>
                     </td>
                 </tr>
             `;
         }).join('');
+        tableBody.querySelectorAll('.incoming-doc-details-btn').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = btn.getAttribute('data-doc-id');
+                const rowDoc = safeDocs.find((d) => String(d._id || d.id) === String(id));
+                if (rowDoc) openDocumentDetailReadonlyModal(rowDoc, 'Incoming document');
+            });
+        });
         safeDocs.forEach((doc) => prefetchAttachmentsDebounced(doc._id || doc.id, 250));
         applySectionFilters(document.getElementById('incoming-section'));
     }
@@ -3735,10 +3781,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>${doc.completed_at ? new Date(doc.completed_at).toLocaleString() : '-'}</td>
                     <td>${escapeHtml(completedBy)}</td>
                     <td>${escapeHtml(doc.completion_remarks || '-')}</td>
-                    <td class="attachments-cell"><button type="button" class="action-btn attachment-preview-btn" data-doc-id="${escapeHtml(doc._id || doc.id || '')}" data-doc-title="${escapeHtml(doc.title || doc.document_code || 'Document')}">👁 Preview</button></td>
+                    <td class="attachments-cell">
+                        <button type="button" class="action-btn complete-doc-details-btn" data-doc-id="${escapeHtml(doc._id || doc.id || '')}">Details</button>
+                        <button type="button" class="action-btn attachment-preview-btn" data-doc-id="${escapeHtml(doc._id || doc.id || '')}" data-doc-title="${escapeHtml(doc.title || doc.document_code || 'Document')}">👁 Preview</button>
+                    </td>
                 </tr>
             `;
         }).join('');
+        tableBody.querySelectorAll('.complete-doc-details-btn').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = btn.getAttribute('data-doc-id');
+                const rowDoc = docs.find((d) => String(d._id || d.id) === String(id));
+                if (rowDoc) openDocumentDetailReadonlyModal(rowDoc, 'Completed document');
+            });
+        });
         docs.forEach((doc) => prefetchAttachmentsDebounced(doc._id || doc.id, 250));
         applySectionFilters(document.getElementById('complete-section'));
     }
