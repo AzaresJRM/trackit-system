@@ -1,11 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // #region agent log
-    fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9cc7bf'},body:JSON.stringify({sessionId:'9cc7bf',runId:'run1',hypothesisId:'H5',location:'js/admin_dashboard.js:2',message:'admin dashboard script loaded',data:{href:window.location.href},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     const API_BASE = 'https://trackit-system.onrender.com/api';
-    // #region agent log
-    fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H5',location:'admin_dashboard.js:API_BASE',message:'Admin API base constant',data:{host:String(window.location.hostname||''),apiBase:API_BASE},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
 
     const topBarTitle = document.querySelector('.top-bar-title');
     const sidebarLinks = document.querySelectorAll('.sidebar-nav li');
@@ -244,16 +238,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const password = String(addUserPassword?.value || '');
                 const role = String(addUserRole?.value || 'USER').trim().toUpperCase();
                 const officeId = String(addUserOfficeSelect?.value || '').trim();
-
-                // #region agent log
-                fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'605efb'},body:JSON.stringify({sessionId:'605efb',runId:'pre-fix',hypothesisId:'H1',location:'js/admin_dashboard.js:248',message:'admin add user values captured (modal flow)',data:{usernameProvided:Boolean(username),roleProvided:Boolean(role),officeIdRaw:officeId,looksLikeUuid:UUID_REGEX.test(officeId),officesLoadedCount:Array.isArray(offices)?offices.length:0},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion
-                // #region agent log
-                fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'605efb'},body:JSON.stringify({sessionId:'605efb',runId:'pre-fix',hypothesisId:'H2',location:'js/admin_dashboard.js:251',message:'admin user create request payload preview (modal flow)',data:{endpoint:`${API_BASE}/users`,username,office_id:officeId,role},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion
-                // #region agent log
-                fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'605efb'},body:JSON.stringify({sessionId:'605efb',runId:'post-fix',hypothesisId:'H6',location:'js/admin_dashboard.js:241',message:'add user modal submit payload',data:{usernameProvided:Boolean(username),role,office_id:officeId,looksLikeUuid:UUID_REGEX.test(officeId),availableOfficeCount:Array.isArray(offices)?offices.length:0},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion
 
                 if (!username || !password || !role || !officeId) {
                     showError('Username, password, role, and office are required.');
@@ -586,9 +570,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 secureFetch(`${API_BASE}/admin/offices`)
             ]);
             if (!usersRes || !officesRes) return;
-            // #region agent log
-            fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9cc7bf'},body:JSON.stringify({sessionId:'9cc7bf',runId:'run1',hypothesisId:'H5',location:'js/admin_dashboard.js:352',message:'admin base data fetch responses',data:{usersStatus:usersRes.status,officesStatus:officesRes.status},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
 
             const usersPayload = await usersRes.json();
             const officesPayload = await officesRes.json();

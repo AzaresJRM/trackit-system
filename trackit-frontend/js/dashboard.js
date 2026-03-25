@@ -332,24 +332,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function fetchNotifications() {
         try {
-            // #region agent log
-            fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H4',location:'dashboard.js:fetchNotifications:beforeFetch',message:'Fetching notifications',data:{url:`${getApiBase()}/notifications?limit=20`},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             const res = await fetch(`${getApiBase()}/notifications?limit=20`, {
                 headers: getAuthHeaders()
             });
-            // #region agent log
-            fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H4',location:'dashboard.js:fetchNotifications:afterFetch',message:'Notifications response',data:{status:res.status,ok:Boolean(res.ok),responseUrl:String(res.url||'')},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             if (!res.ok) throw new Error('Failed to fetch notifications');
             const payload = await res.json();
             notificationsCache = Array.isArray(payload.items) ? payload.items : [];
             renderNotifications(notificationsCache);
             setNotificationsBadge(payload.unread_count || 0);
         } catch (err) {
-            // #region agent log
-            fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H4',location:'dashboard.js:fetchNotifications:catch',message:'Notifications fetch failed',data:{errorName:String(err?.name||''),errorMessage:String(err?.message||'')},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             console.error('Notification fetch failed:', err);
         }
     }
@@ -671,6 +662,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                     rewritten.hash = parsed.hash;
                     return rewritten.toString();
                 }
+                let apiHostname = '';
+                try {
+                    apiHostname = new URL(getApiBase()).hostname;
+                } catch (_) {
+                    apiHostname = '';
+                }
+                if (
+                    parsed.protocol === 'http:' &&
+                    (parsed.hostname === 'trackit-system.onrender.com' ||
+                        (apiHostname &&
+                            parsed.hostname === apiHostname &&
+                            apiHostname !== 'localhost' &&
+                            apiHostname !== '127.0.0.1'))
+                ) {
+                    parsed.protocol = 'https:';
+                    return parsed.toString();
+                }
                 return url;
             } catch (_) {
                 return url;
@@ -753,18 +761,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (attachmentMetaCacheByDocId.has(docId)) return attachmentMetaCacheByDocId.get(docId);
         if (attachmentMetaInFlightByDocId.has(docId)) return attachmentMetaInFlightByDocId.get(docId);
         const request = (async () => {
-            // #region agent log
-            fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'92a532'},body:JSON.stringify({sessionId:'92a532',runId:'run1',hypothesisId:'H3',location:'dashboard.js:fetchDocumentAttachments:beforeFetch',message:'fetch document attachments request',data:{docId:String(docId||''),url:`${getApiBase()}/documents/${docId}/attachments`,hasAuthHeader:Boolean(getAuthHeaders()?.Authorization),cacheHit:Boolean(attachmentMetaCacheByDocId.has(docId))},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             const res = await fetch(`${getApiBase()}/documents/${docId}/attachments`, {
                 headers: getAuthHeaders()
             });
             if (!res.ok) throw new Error('Failed to fetch attachments');
             const data = await res.json();
             const list = (Array.isArray(data.attachments) ? data.attachments : []).map(normalizeAttachmentUrls);
-            // #region agent log
-            fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'92a532'},body:JSON.stringify({sessionId:'92a532',runId:'run1',hypothesisId:'H3',location:'dashboard.js:fetchDocumentAttachments:afterFetch',message:'fetch document attachments response',data:{docId:String(docId||''),status:res.status,ok:Boolean(res.ok),attachmentCount:list.length,firstAttachmentId:String(list?.[0]?.id||'')},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             attachmentMetaCacheByDocId.set(docId, list);
             return list;
         })();
@@ -836,13 +838,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const safeType = escapeHtml(att.mimeType || getExtension(att.name) || 'Unknown');
         const previewUrl = att.previewUrl || att.url || '#';
         const downloadUrl = att.downloadUrl || att.url || '#';
+        const attachmentIdRaw = att.id != null && String(att.id) !== '' ? String(att.id) : (att._id != null && String(att._id) !== '' ? String(att._id) : '');
+        const apiBase = getApiBase();
+        const inlineSrc = attachmentIdRaw
+            ? withAttachmentToken(`${apiBase}/attachments/${encodeURIComponent(attachmentIdRaw)}/preview`)
+            : previewUrl;
         if (kind === 'image') {
             targetEl.innerHTML = `
                 <div class="attachment-preview-actions">
                     <a href="${previewUrl}" target="_blank" rel="noopener noreferrer" class="attachment-preview-link">Open</a>
                     <a href="${downloadUrl}" target="_blank" rel="noopener noreferrer" class="attachment-preview-link">Download</a>
                 </div>
-                <img class="attachment-preview-image" src="${previewUrl}" alt="${safeName}" loading="lazy">
+                <img class="attachment-preview-image" src="${inlineSrc}" alt="${safeName}" loading="lazy">
             `;
             return;
         }
@@ -852,12 +859,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <a href="${previewUrl}" target="_blank" rel="noopener noreferrer" class="attachment-preview-link">Open</a>
                     <a href="${downloadUrl}" target="_blank" rel="noopener noreferrer" class="attachment-preview-link">Download</a>
                 </div>
-                <iframe class="attachment-preview-pdf" src="${previewUrl}" title="${safeName}"></iframe>
+                <iframe class="attachment-preview-pdf" src="${inlineSrc}" title="${safeName}"></iframe>
             `;
             return;
         }
         if (kind === 'word') {
-            const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(previewUrl)}`;
+            const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(inlineSrc)}`;
             targetEl.innerHTML = `
                 <div class="attachment-preview-actions">
                     <a href="${previewUrl}" target="_blank" rel="noopener noreferrer" class="attachment-preview-link">Open</a>
@@ -884,9 +891,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function openAttachmentPreviewModal({ docId, docTitle }) {
-        // #region agent log
-        fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'92a532'},body:JSON.stringify({sessionId:'92a532',runId:'run1',hypothesisId:'H2',location:'dashboard.js:openAttachmentPreviewModal:entry',message:'preview modal opened',data:{docId:String(docId||''),docTitle:String(docTitle||'')},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         const modal = createAttachmentPreviewModal();
         const titleEl = modal.querySelector('#attachment-preview-title');
         const bodyEl = modal.querySelector('#attachment-preview-body');
@@ -1055,9 +1059,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             offset: 0
         };
 
-        // #region agent log
-        fetch('http://127.0.0.1:7554/ingest/211d2500-52e9-414d-b69d-493cd1259842', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'eb249a' }, body: JSON.stringify({ sessionId: 'eb249a', runId: 'pre-fix', hypothesisId: 'H4', location: 'dashboard.js:performTrackSearch:entry', message: 'track search started', data: { hasCode: Boolean(filters.code), hasKeyword: Boolean(filters.keyword), statusPhase: filters.statusPhase || '', datePreset: filters.datePreset || '', hasScopeOfficeId: Boolean(filters.scopeOfficeId), hasScopeUserId: Boolean(filters.scopeUserId) }, timestamp: Date.now() }) }).catch(() => {});
-        // #endregion
 
         lastTrackQuery = filters;
         setTrackFeedback('Searching documents...');
@@ -1172,14 +1173,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (recent) params.push('recent=true');
         if (recentMode) params.push(`recentMode=${encodeURIComponent(recentMode)}`);
         url += params.join('&');
-        // #region agent log
-        fetch('http://127.0.0.1:7554/ingest/211d2500-52e9-414d-b69d-493cd1259842', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'eb249a' }, body: JSON.stringify({ sessionId: 'eb249a', runId: 'pre-fix', hypothesisId: 'H5', location: 'dashboard.js:fetchTrackedDocument:request', message: 'track request built', data: { requestType: recent ? 'recent' : 'search', hasCode: Boolean(code), hasKeyword: Boolean(keyword), statusPhase: statusPhase || '', datePreset: datePreset || '', hasScopeOfficeId: Boolean(scopeOfficeId), hasScopeUserId: Boolean(scopeUserId), limit, offset }, timestamp: Date.now() }) }).catch(() => {});
-        // #endregion
         const res = await fetch(url);
         const payload = await res.json();
-        // #region agent log
-        fetch('http://127.0.0.1:7554/ingest/211d2500-52e9-414d-b69d-493cd1259842', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'eb249a' }, body: JSON.stringify({ sessionId: 'eb249a', runId: 'pre-fix', hypothesisId: 'H5', location: 'dashboard.js:fetchTrackedDocument:response', message: 'track response received', data: { ok: res.ok, status: res.status, payloadHasItemsArray: Boolean(payload && Array.isArray(payload.items)), payloadIsArray: Array.isArray(payload), errorMessage: payload?.error ? String(payload.error) : '' }, timestamp: Date.now() }) }).catch(() => {});
-        // #endregion
         if (!res.ok) {
             throw new Error(payload?.error || 'Unable to fetch tracked documents');
         }
@@ -1188,9 +1183,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderTimeline(statusHistory) {
         if (!statusHistory || !statusHistory.length) return '<div class="timeline-empty">No status history available.</div>';
-        // #region agent log
-        fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0680fe'},body:JSON.stringify({sessionId:'0680fe',runId:'run1',hypothesisId:'H3',location:'dashboard.js:renderTimeline',message:'timeline items before render',data:{count:Array.isArray(statusHistory)?statusHistory.length:0,remarksPreview:(Array.isArray(statusHistory)?statusHistory.slice(0,3):[]).map(i=>String(i?.remarks||'')),statusPreview:(Array.isArray(statusHistory)?statusHistory.slice(0,3):[]).map(i=>String(i?.status||''))},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         return `<div class="timeline">
             ${statusHistory.map(item => `
                 <div class="timeline-item">
@@ -1293,9 +1285,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function toTrackTimelineItems(timelinePayload) {
         const list = Array.isArray(timelinePayload?.timeline) ? timelinePayload.timeline : [];
-        // #region agent log
-        fetch('http://127.0.0.1:7747/ingest/52959616-5e84-48f3-95c4-210ef6f8a534',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'bc97f8'},body:JSON.stringify({sessionId:'bc97f8',runId:'run1',hypothesisId:'H3',location:'dashboard.js:toTrackTimelineItems:input',message:'timeline input snapshot before frontend sort',data:{count:list.length,datePreview:list.slice(0,5).map((item)=>item?.date||null),statusPreview:list.slice(0,5).map((item)=>String(item?.status||''))},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         const mapped = list
             .map((item, index) => ({
                 status: item.status,
@@ -1317,12 +1306,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             .map(({ _originalIndex, ...item }) => item);
         const mappedEpochs = mapped.map((item) => new Date(item.date).getTime());
         const mappedMonotonicAsc = mappedEpochs.every((ts, index) => index === 0 || ts >= mappedEpochs[index - 1]);
-        // #region agent log
-        fetch('http://127.0.0.1:7747/ingest/52959616-5e84-48f3-95c4-210ef6f8a534',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'bc97f8'},body:JSON.stringify({sessionId:'bc97f8',runId:'run1',hypothesisId:'H4',location:'dashboard.js:toTrackTimelineItems:output',message:'timeline output snapshot after frontend sort',data:{count:mapped.length,firstDate:mapped[0]?.date||null,lastDate:mapped[mapped.length-1]?.date||null,monotonicAsc:Boolean(mappedMonotonicAsc),invalidDateCount:mappedEpochs.filter((v)=>!Number.isFinite(v)).length,statusPreview:mapped.slice(0,5).map((item)=>String(item?.status||''))},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-        // #region agent log
-        fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0680fe'},body:JSON.stringify({sessionId:'0680fe',runId:'run1',hypothesisId:'H4',location:'dashboard.js:toTrackTimelineItems',message:'timeline map transform snapshot',data:{inputRemarksPreview:list.slice(0,3).map(i=>String(i?.remarks||'')),outputRemarksPreview:mapped.slice(0,3).map(i=>String(i?.remarks||'')),inputCount:list.length,outputCount:mapped.length},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         return mapped;
     }
 
@@ -1333,12 +1316,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const docId = doc._id || doc.id;
             const timelinePayload = await fetchDocumentTimeline(docId);
-            // #region agent log
-            fetch('http://127.0.0.1:7747/ingest/52959616-5e84-48f3-95c4-210ef6f8a534',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'bc97f8'},body:JSON.stringify({sessionId:'bc97f8',runId:'run1',hypothesisId:'H5',location:'dashboard.js:openTrackedDocument:api',message:'timeline API payload received for logs panel',data:{docId:String(docId||''),timelineCount:Array.isArray(timelinePayload?.timeline)?timelinePayload.timeline.length:0,apiDatePreview:(Array.isArray(timelinePayload?.timeline)?timelinePayload.timeline.slice(0,5):[]).map((item)=>item?.date||null),apiStatusPreview:(Array.isArray(timelinePayload?.timeline)?timelinePayload.timeline.slice(0,5):[]).map((item)=>String(item?.status||''))},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
-            // #region agent log
-            fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0680fe'},body:JSON.stringify({sessionId:'0680fe',runId:'run1',hypothesisId:'H2',location:'dashboard.js:openTrackedDocument',message:'timeline api payload snapshot',data:{docId:String(docId||''),timelineCount:Array.isArray(timelinePayload?.timeline)?timelinePayload.timeline.length:0,timelineRemarksPreview:(Array.isArray(timelinePayload?.timeline)?timelinePayload.timeline.slice(0,3):[]).map(i=>String(i?.remarks||''))},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             const withTimeline = {
                 ...doc,
                 status: timelinePayload?.current_status || doc.status,
@@ -1381,9 +1358,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!trackRecentList) return;
         setActiveRecentTab(mode);
         trackRecentList.innerHTML = '<div class="track-loading">Loading recent documents...</div>';
-        // #region agent log
-        fetch('http://127.0.0.1:7554/ingest/211d2500-52e9-414d-b69d-493cd1259842', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'eb249a' }, body: JSON.stringify({ sessionId: 'eb249a', runId: 'pre-fix', hypothesisId: 'H6', location: 'dashboard.js:loadRecentDocuments:entry', message: 'recent load started', data: { mode }, timestamp: Date.now() }) }).catch(() => {});
-        // #endregion
         try {
             const scope = getTrackScope();
             const payload = await fetchTrackedDocument({
@@ -1401,9 +1375,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderRecentDocuments(docs);
             if (window.updateSidebarBadges) window.updateSidebarBadges();
         } catch (err) {
-            // #region agent log
-            fetch('http://127.0.0.1:7554/ingest/211d2500-52e9-414d-b69d-493cd1259842', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'eb249a' }, body: JSON.stringify({ sessionId: 'eb249a', runId: 'pre-fix', hypothesisId: 'H6', location: 'dashboard.js:loadRecentDocuments:catch', message: 'recent load failed', data: { errorMessage: String(err?.message || '') }, timestamp: Date.now() }) }).catch(() => {});
-            // #endregion
             window.logDocs = [];
             trackRecentList.innerHTML = '<div class="track-no-result">Failed to load recent documents.</div>';
             if (window.updateSidebarBadges) window.updateSidebarBadges();
@@ -2320,9 +2291,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     try {
                         return JSON.parse(raw);
                     } catch (err) {
-                        // #region agent log
-                        fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f9d501'},body:JSON.stringify({sessionId:'f9d501',runId:'run1',hypothesisId:'H3',location:'dashboard.js:parseJsonOrThrow(received-edit)',message:'received-attachments response was non-JSON',data:{contextLabel,status:response.status,contentType,responseUrl:String(response.url||''),rawPreview:String(raw||'').slice(0,200)},timestamp:Date.now()})}).catch(()=>{});
-                        // #endregion
                         throw new Error(`${contextLabel} returned non-JSON (status ${response.status}, content-type ${contentType || 'unknown'})`);
                     }
                 };
@@ -2365,17 +2333,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     formData.append('remarks', confirmedRemarks);
                     files.forEach((file) => formData.append('files[]', file));
                     const receivedAttachmentsUrl = `${getApiBase()}/documents/${docId}/received-attachments`;
-                    // #region agent log
-                    fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'389aea'},body:JSON.stringify({sessionId:'389aea',runId:'run1',hypothesisId:'H1',location:'dashboard.js:received-edit:beforeFetch',message:'received-attachments request',data:{url:receivedAttachmentsUrl,method:'POST',docId:String(docId||''),apiBase:getApiBase()},timestamp:Date.now()})}).catch(()=>{});
-                    // #endregion
                     const updateRes = await fetch(receivedAttachmentsUrl, {
                         method: 'POST',
                         headers: getAuthHeaders(),
                         body: formData
                     });
-                    // #region agent log
-                    fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'389aea'},body:JSON.stringify({sessionId:'389aea',runId:'run1',hypothesisId:'H2',location:'dashboard.js:received-edit:afterFetch',message:'received-attachments response',data:{status:updateRes.status,ok:updateRes.ok,contentType:String(updateRes.headers.get('content-type')||''),responseUrl:String(updateRes.url||'')},timestamp:Date.now()})}).catch(()=>{});
-                    // #endregion
                     const updatePayload = await parseJsonOrThrow(updateRes, 'Received attachment update');
                     if (!updateRes.ok) throw new Error(updatePayload.error || 'Failed to update received attachments');
                     attachmentMetaCacheByDocId.delete(String(docId));
@@ -2864,9 +2826,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 try {
                     const updateUrl = `${getApiBase()}/documents/${docId}`;
                     const authHeaders = getAuthHeaders();
-                    // #region agent log
-                    fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'220726'},body:JSON.stringify({sessionId:'220726',runId:'run1',hypothesisId:'H2',location:'dashboard.js:openEditOutgoingModal:beforeUpdateFetch',message:'about to call outgoing update endpoint',data:{docId:String(docId||''),updateUrl,removeAttachmentCount:removeAttachmentIds.length,fileCount:files.length,hasAuthHeader:Boolean(authHeaders?.Authorization)},timestamp:Date.now()})}).catch(()=>{});
-                    // #endregion
                     const updateRes = await fetch(updateUrl, {
                         method: 'PUT',
                         headers: {
@@ -2885,27 +2844,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!updateRes.ok) throw new Error(updatePayload.error || 'Failed to update document');
 
                     if (removeAttachmentIds.length) {
-                        // #region agent log
-                        fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6e07b1'},body:JSON.stringify({sessionId:'6e07b1',runId:'run1',hypothesisId:'H1',location:'dashboard.js:2595',message:'Starting attachment removals',data:{docId:String(docId||''),removeAttachmentIds,existingAttachmentIds:(Array.isArray(existingAttachments)?existingAttachments.map((att)=>String(att?.id||att?._id||'')):[])},timestamp:Date.now()})}).catch(()=>{});
-                        // #endregion
                         for (const attachmentId of removeAttachmentIds) {
                             const removeUrl = `${getApiBase()}/documents/${docId}/attachments/${attachmentId}`;
-                            // #region agent log
-                            fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'220726'},body:JSON.stringify({sessionId:'220726',runId:'run1',hypothesisId:'H3',location:'dashboard.js:openEditOutgoingModal:beforeDeleteFetch',message:'about to call attachment delete endpoint',data:{docId:String(docId||''),attachmentId:String(attachmentId||''),removeUrl,hasAuthHeader:Boolean(getAuthHeaders()?.Authorization)},timestamp:Date.now()})}).catch(()=>{});
-                            // #endregion
-                            // #region agent log
-                            fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6e07b1'},body:JSON.stringify({sessionId:'6e07b1',runId:'run1',hypothesisId:'H2',location:'dashboard.js:2597',message:'Attachment delete request prepared',data:{docId:String(docId||''),attachmentId:String(attachmentId||''),removeUrl},timestamp:Date.now()})}).catch(()=>{});
-                            // #endregion
                             const removeRes = await fetch(removeUrl, {
                                 method: 'DELETE',
                                 headers: getAuthHeaders()
                             });
-                            // #region agent log
-                            fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'220726'},body:JSON.stringify({sessionId:'220726',runId:'run1',hypothesisId:'H4',location:'dashboard.js:openEditOutgoingModal:afterDeleteFetch',message:'attachment delete endpoint response',data:{docId:String(docId||''),attachmentId:String(attachmentId||''),status:removeRes.status,ok:Boolean(removeRes.ok),contentType:String(removeRes.headers.get('content-type')||''),responseUrl:String(removeRes.url||'')},timestamp:Date.now()})}).catch(()=>{});
-                            // #endregion
-                            // #region agent log
-                            fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6e07b1'},body:JSON.stringify({sessionId:'6e07b1',runId:'run1',hypothesisId:'H3',location:'dashboard.js:2601',message:'Attachment delete response received',data:{docId:String(docId||''),attachmentId:String(attachmentId||''),status:removeRes.status,contentType:String(removeRes.headers.get('content-type')||''),url:removeRes.url||removeUrl,ok:Boolean(removeRes.ok)},timestamp:Date.now()})}).catch(()=>{});
-                            // #endregion
                             const removePayload = await parseJsonOrThrow(removeRes, 'Attachment removal');
                             if (!removeRes.ok) throw new Error(removePayload.error || 'Failed to remove selected attachment');
                         }
@@ -2924,17 +2868,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                             formData.append('replaced_attachments', JSON.stringify(replacedAttachments));
                         }
                         const uploadUrl = `${getApiBase()}/documents/${docId}/attachments`;
-                        // #region agent log
-                        fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'220726'},body:JSON.stringify({sessionId:'220726',runId:'run1',hypothesisId:'H5',location:'dashboard.js:openEditOutgoingModal:beforeUploadFetch',message:'about to call attachment upload endpoint',data:{docId:String(docId||''),uploadUrl,fileCount:files.length,hasAuthHeader:Boolean(getAuthHeaders()?.Authorization)},timestamp:Date.now()})}).catch(()=>{});
-                        // #endregion
                         const uploadRes = await fetch(uploadUrl, {
                             method: 'POST',
                             headers: getAuthHeaders(),
                             body: formData
                         });
-                        // #region agent log
-                        fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'220726'},body:JSON.stringify({sessionId:'220726',runId:'run1',hypothesisId:'H5',location:'dashboard.js:openEditOutgoingModal:afterUploadFetch',message:'attachment upload endpoint response',data:{docId:String(docId||''),status:uploadRes.status,ok:Boolean(uploadRes.ok),contentType:String(uploadRes.headers.get('content-type')||''),responseUrl:String(uploadRes.url||'')},timestamp:Date.now()})}).catch(()=>{});
-                        // #endregion
                         const uploadPayload = await parseJsonOrThrow(uploadRes, 'Attachment upload');
                         if (!uploadRes.ok) throw new Error(uploadPayload.error || 'Document updated but attachment upload failed');
                     }
@@ -3081,9 +3019,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     .map(option => String(option.value || '').trim())
                     .filter(Boolean);
                 const files = pendingOutgoingAttachments.slice();
-                // #region agent log
-                fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'92a532'},body:JSON.stringify({sessionId:'92a532',runId:'run1',hypothesisId:'H1',location:'dashboard.js:outgoingSubmit:entry',message:'new outgoing submit started',data:{selectedOfficeCount:selectedOfficeIds.length,fileCount:files.length,fileNames:files.slice(0,5).map((f)=>String(f?.name||''))},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion
                 if (!title || !typeName || selectedOfficeIds.length === 0) {
                     alert('Please select at least one destination office.');
                     return;
@@ -3112,20 +3047,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 // Find the type_id for the selected type name
                 const selectedType = String(typeName || '').trim().toLowerCase();
-                // #region agent log
-                fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'12698a'},body:JSON.stringify({sessionId:'12698a',runId:'run1',hypothesisId:'H2',location:'dashboard.js:1661',message:'Outgoing submit type matching input',data:{selectedType,typeNameRaw:typeName,documentTypesCount:Array.isArray(documentTypes)?documentTypes.length:-1,documentTypeNames:Array.isArray(documentTypes)?documentTypes.slice(0,10).map(dt=>String(dt?.type_name||'')):[]},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion
                 const docType = documentTypes.find(dt => String(dt.type_name || '').trim().toLowerCase() === selectedType);
                 if (!docType) {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'12698a'},body:JSON.stringify({sessionId:'12698a',runId:'run1',hypothesisId:'H1',location:'dashboard.js:1663',message:'Outgoing submit failed to resolve docType',data:{selectedType,hasDocumentTypes:Array.isArray(documentTypes),documentTypesCount:Array.isArray(documentTypes)?documentTypes.length:-1},timestamp:Date.now()})}).catch(()=>{});
-                    // #endregion
                     alert('Invalid document type selected.');
                     return;
                 }
-                // #region agent log
-                fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'12698a'},body:JSON.stringify({sessionId:'12698a',runId:'run1',hypothesisId:'H3',location:'dashboard.js:1667',message:'Outgoing submit resolved docType',data:{selectedType,resolvedTypeName:docType?.type_name,resolvedTypeId:docType?._id||null,resolvedTypeIdAlt:docType?.id||null},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion
                 const type_id = docType._id;
                 // Debug log
                 console.log({
@@ -3153,9 +3079,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     })
                 });
                 const result = await response.json();
-                // #region agent log
-                fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'92a532'},body:JSON.stringify({sessionId:'92a532',runId:'run1',hypothesisId:'H2',location:'dashboard.js:outgoingSubmit:afterCreate',message:'new outgoing create response',data:{createOk:Boolean(response.ok),createStatus:response.status,resultDocId:String(result?._id||result?.document?._id||''),requestedAttachmentCount:files.length},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion
                 if (response.ok) {
                     // Start of File Attachments Feature #6
                     if (files.length > 0) {
@@ -3165,17 +3088,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                             files.forEach(file => formData.append('files[]', file));
 
                             try {
-                                // #region agent log
-                                fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'92a532'},body:JSON.stringify({sessionId:'92a532',runId:'run1',hypothesisId:'H1',location:'dashboard.js:outgoingSubmit:beforeUpload',message:'new outgoing upload request',data:{docId:String(docId||''),fileCount:files.length,uploadUrl:`${getApiBase()}/documents/${docId}/attachments`,hasAuthHeader:false},timestamp:Date.now()})}).catch(()=>{});
-                                // #endregion
                                 const uploadRes = await fetch(`${getApiBase()}/documents/${docId}/attachments`, {
                                     method: 'POST',
                                     headers: getAuthHeaders(),
                                     body: formData
                                 });
-                                // #region agent log
-                                fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'92a532'},body:JSON.stringify({sessionId:'92a532',runId:'run1',hypothesisId:'H1',location:'dashboard.js:outgoingSubmit:afterUpload',message:'new outgoing upload response',data:{docId:String(docId||''),uploadOk:Boolean(uploadRes.ok),uploadStatus:uploadRes.status},timestamp:Date.now()})}).catch(()=>{});
-                                // #endregion
 
                                 if (!uploadRes.ok) {
                                     throw new Error('Upload API failed');
@@ -3205,9 +3122,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 const fallbackStorage = JSON.parse(localStorage.getItem('documentAttachments') || '{}');
                                 fallbackStorage[docId] = (fallbackStorage[docId] || []).concat(attachments);
                                 localStorage.setItem('documentAttachments', JSON.stringify(fallbackStorage));
-                                // #region agent log
-                                fetch('http://127.0.0.1:7529/ingest/2186c759-b7ed-45d3-980b-04cc62c10e13',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'92a532'},body:JSON.stringify({sessionId:'92a532',runId:'run1',hypothesisId:'H4',location:'dashboard.js:outgoingSubmit:fallbackLocalStorage',message:'upload failed and local fallback used',data:{docId:String(docId||''),fileCount:files.length,fallbackCount:Number((fallbackStorage[docId]||[]).length)},timestamp:Date.now()})}).catch(()=>{});
-                                // #endregion
                                 alert('Document added (Attachments saved locally as fallback).');
                             }
                         } else {
@@ -3330,9 +3244,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return match ? { label: item.label, value: match.type_name } : null;
             })
             .filter(Boolean);
-        // #region agent log
-        fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'12698a'},body:JSON.stringify({sessionId:'12698a',runId:'run1',hypothesisId:'H4',location:'dashboard.js:1872',message:'populateTypeDropdowns resolved options',data:{documentTypesCount:documentTypes.length,resolvedOptionsCount:resolvedOptions.length,resolvedOptions},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
 
         if (outgoingTypeSelect) {
             outgoingTypeSelect.innerHTML = '<option value="">-- Select Type --</option>';
@@ -3357,27 +3268,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadDocumentTypes() {
         try {
-            // #region agent log
-            fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H2',location:'dashboard.js:loadDocumentTypes:beforeFetch',message:'Fetching document types',data:{url:`${getOfficesApiBase()}/document-types`},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             const res = await fetch(`${getOfficesApiBase()}/document-types`);
-            // #region agent log
-            fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H2',location:'dashboard.js:loadDocumentTypes:afterFetch',message:'Document types response',data:{status:res.status,ok:Boolean(res.ok),responseUrl:String(res.url||'')},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             if (!res.ok) throw new Error('Failed to load document types');
             documentTypes = await res.json();
-            // #region agent log
-            fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'12698a'},body:JSON.stringify({sessionId:'12698a',runId:'run1',hypothesisId:'H1',location:'dashboard.js:1899',message:'loadDocumentTypes success',data:{ok:res.ok,count:Array.isArray(documentTypes)?documentTypes.length:-1,typeNames:Array.isArray(documentTypes)?documentTypes.slice(0,10).map(dt=>String(dt?.type_name||'')):[]},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             populateTypeDropdowns();
         } catch (err) {
-            // #region agent log
-            fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H2',location:'dashboard.js:loadDocumentTypes:catch',message:'Document types fetch failed',data:{errorName:String(err?.name||''),errorMessage:String(err?.message||'')},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             console.error('Error loading document types:', err);
-            // #region agent log
-            fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'12698a'},body:JSON.stringify({sessionId:'12698a',runId:'run1',hypothesisId:'H1',location:'dashboard.js:1902',message:'loadDocumentTypes failure',data:{errorMessage:String(err?.message||''),errorName:String(err?.name||'')},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             documentTypes = [];
         }
     }
@@ -3430,15 +3326,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             const incomingUrl = `${getApiBase()}/documents/incoming?office_id=${myOfficeId}`;
-            // #region agent log
-            fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H4',location:'dashboard.js:fetchAndRenderIncomingDocs:beforeFetch',message:'Fetching incoming documents',data:{url:incomingUrl,hasOfficeId:Boolean(myOfficeId)},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             const res = await fetch(incomingUrl, {
                 headers: getAuthHeaders()
             });
-            // #region agent log
-            fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H4',location:'dashboard.js:fetchAndRenderIncomingDocs:afterFetch',message:'Incoming documents response',data:{status:res.status,ok:Boolean(res.ok),responseUrl:String(res.url||'')},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             if (!res.ok) throw new Error('Failed to fetch incoming documents');
             const incomingDocs = await res.json();
             const normalized = Array.isArray(incomingDocs) ? incomingDocs : [];
@@ -3449,9 +3339,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (window.updateSummaryCards) window.updateSummaryCards();
             if (window.updateSidebarBadges) window.updateSidebarBadges();
         } catch (err) {
-            // #region agent log
-            fetch('http://127.0.0.1:7504/ingest/c8df2e71-8b01-4ece-8cd5-28b4277ad08c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a1d6aa'},body:JSON.stringify({sessionId:'a1d6aa',runId:'run1',hypothesisId:'H4',location:'dashboard.js:fetchAndRenderIncomingDocs:catch',message:'Incoming documents fetch failed',data:{errorName:String(err?.name||''),errorMessage:String(err?.message||'')},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             console.error('Failed to fetch incoming documents:', err);
             window.incomingDocs = [];
             renderIncomingCards([]);
