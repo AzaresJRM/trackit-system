@@ -110,6 +110,102 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    const userVoluntaryChangePasswordLink = document.getElementById('userVoluntaryChangePasswordLink');
+    const userVoluntaryPasswordModal = document.getElementById('userVoluntaryPasswordModal');
+    const userVoluntaryPasswordForm = document.getElementById('userVoluntaryPasswordForm');
+    const userVoluntaryCurrentPassword = document.getElementById('userVoluntaryCurrentPassword');
+    const userVoluntaryNewPassword = document.getElementById('userVoluntaryNewPassword');
+    const userVoluntaryConfirmPassword = document.getElementById('userVoluntaryConfirmPassword');
+    const userVoluntaryPasswordMessage = document.getElementById('userVoluntaryPasswordMessage');
+    const userVoluntaryPasswordCancelBtn = document.getElementById('userVoluntaryPasswordCancelBtn');
+
+    function setUserVoluntaryPasswordMessage(message, isError = false) {
+        if (!userVoluntaryPasswordMessage) return;
+        userVoluntaryPasswordMessage.textContent = message || '';
+        userVoluntaryPasswordMessage.classList.toggle('error', !!isError);
+    }
+
+    function closeUserVoluntaryPasswordModal() {
+        if (!userVoluntaryPasswordModal) return;
+        userVoluntaryPasswordModal.style.display = 'none';
+        if (userVoluntaryPasswordForm) userVoluntaryPasswordForm.reset();
+        setUserVoluntaryPasswordMessage('');
+    }
+
+    if (userVoluntaryChangePasswordLink && userVoluntaryPasswordModal && userVoluntaryPasswordForm) {
+        userVoluntaryChangePasswordLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            userVoluntaryPasswordForm.reset();
+            setUserVoluntaryPasswordMessage('');
+            userVoluntaryPasswordModal.style.display = 'flex';
+            if (userVoluntaryCurrentPassword) userVoluntaryCurrentPassword.focus();
+        });
+
+        if (userVoluntaryPasswordCancelBtn) {
+            userVoluntaryPasswordCancelBtn.addEventListener('click', () => {
+                closeUserVoluntaryPasswordModal();
+            });
+        }
+
+        userVoluntaryPasswordModal.addEventListener('click', (event) => {
+            if (event.target === userVoluntaryPasswordModal) {
+                closeUserVoluntaryPasswordModal();
+            }
+        });
+
+        userVoluntaryPasswordForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const currentPassword = String(userVoluntaryCurrentPassword?.value || '').trim();
+            const newPassword = String(userVoluntaryNewPassword?.value || '').trim();
+            const confirmPassword = String(userVoluntaryConfirmPassword?.value || '').trim();
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                setUserVoluntaryPasswordMessage('All fields are required.', true);
+                return;
+            }
+            if (newPassword.length < 8) {
+                setUserVoluntaryPasswordMessage('New password must be at least 8 characters.', true);
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                setUserVoluntaryPasswordMessage('New password and confirmation do not match.', true);
+                return;
+            }
+
+            const user = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
+            const token = String(user?.token || '').trim();
+            if (!token) {
+                setUserVoluntaryPasswordMessage('Session expired. Please log in again.', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${getApiBase()}/auth/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    setUserVoluntaryPasswordMessage(payload.message || 'Failed to update password.', true);
+                    return;
+                }
+                setUserVoluntaryPasswordMessage(payload.message || 'Password updated successfully.', false);
+                setTimeout(() => {
+                    closeUserVoluntaryPasswordModal();
+                }, 700);
+            } catch (error) {
+                setUserVoluntaryPasswordMessage('Failed to update password.', true);
+            }
+        });
+    }
+
     const refreshButton = document.getElementById('refreshButton');
     if (refreshButton) {
         refreshButton.addEventListener('click', () => {

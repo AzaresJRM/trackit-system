@@ -47,7 +47,7 @@
             <div class="settings">
                 <div class="module-title">SETTINGS</div>
                 <ul>
-                    <li><a href="#"><i class="fas fa-key"></i> Change Password</a></li>
+                    <li><a href="#" id="userVoluntaryChangePasswordLink"><i class="fas fa-key"></i> Change Password</a></li>
                     <li><a href="#" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </div>
@@ -492,6 +492,26 @@
                 <input type="password" id="forceConfirmPassword" autocomplete="new-password" minlength="8" required>
                 <p id="forcePasswordChangeMessage" class="force-password-message"></p>
                 <div class="modal-buttons">
+                    <button type="submit" class="btn-logout" style="background:#2563eb;">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="userVoluntaryPasswordModal" class="modal force-password-modal" style="display:none;">
+        <div class="modal-content">
+            <h2><i class="fas fa-key"></i> Change Password</h2>
+            <p>Update your account password.</p>
+            <form id="userVoluntaryPasswordForm">
+                <label for="userVoluntaryCurrentPassword">Current Password</label>
+                <input type="password" id="userVoluntaryCurrentPassword" autocomplete="current-password" required>
+                <label for="userVoluntaryNewPassword">New Password</label>
+                <input type="password" id="userVoluntaryNewPassword" autocomplete="new-password" minlength="8" required>
+                <label for="userVoluntaryConfirmPassword">Confirm New Password</label>
+                <input type="password" id="userVoluntaryConfirmPassword" autocomplete="new-password" minlength="8" required>
+                <p id="userVoluntaryPasswordMessage" class="force-password-message"></p>
+                <div class="modal-buttons">
+                    <button type="button" id="userVoluntaryPasswordCancelBtn" class="btn-cancel">Cancel</button>
                     <button type="submit" class="btn-logout" style="background:#2563eb;">Update Password</button>
                 </div>
             </form>
