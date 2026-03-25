@@ -262,6 +262,7 @@ router.get('/my-office', requireUser, async (req, res) => {
         id: doc.id,
         tracking_code: doc.document_code,
         title: doc.title,
+        content: doc.content ?? null,
         type_name: doc.type ? doc.type.type_name : null,
         current_status: scopedStatus,
         last_updated: doc.updated_at || latestTimelineDate || null,

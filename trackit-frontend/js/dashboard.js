@@ -1211,6 +1211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div><b>Code:</b> ${escapeHtml(doc.document_code || '-')}</div>
                 <div><b>Title:</b> ${escapeHtml(doc.title || '-')}${editedIndicator}</div>
                 <div><b>Type:</b> ${escapeHtml(doc.type_id?.type_name || '-')}</div>
+                <div><b>Content/Description:</b> ${escapeHtml(doc.content || '-')}</div>
                 <div><b>Current Office:</b> ${escapeHtml(doc.current_office_id?.office_name || '-')}</div>
                 <div><b>Status:</b> <span class="${getStatusPillClass(doc.status)}">${escapeHtml(formatStatusForDisplay(doc.status))}</span></div>
                 <div style="margin-top:10px;"><button type="button" class="action-btn attachment-preview-btn" data-doc-id="${escapeHtml(doc._id || doc.id || '')}" data-doc-title="${escapeHtml(doc.title || doc.document_code || 'Document')}">👁 Preview</button></div>
@@ -1517,6 +1518,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div><strong>Tracking Code:</strong> ${escapeHtml(doc.tracking_code || '-')}</div>
                     <div><strong>Title:</strong> ${escapeHtml(doc.title || '-')}${hasEditedEvent ? ' <span class="edited-indicator">Edited</span>' : ''}</div>
                     <div><strong>Type:</strong> ${escapeHtml(doc.type_name || '-')}</div>
+                    <div><strong>Content/Description:</strong> ${escapeHtml(doc.content || '-')}</div>
                     <div><strong>Current Status:</strong> ${escapeHtml(doc.current_status || '-')}</div>
                     <div><strong>Last Updated:</strong> ${escapeHtml(formatReportDateTime(doc.last_updated))}</div>
                     <div class="logs-report-preview-action"><button type="button" class="action-btn attachment-preview-btn" data-doc-id="${escapeHtml(doc.id || '')}" data-doc-title="${escapeHtml(doc.title || doc.tracking_code || 'Document')}">👁 Preview</button></div>
@@ -2608,6 +2610,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <h3 style="margin-top:0;">Recipient Status Breakdown</h3>
                     <div style="margin-bottom:12px;">
                         <strong>Document:</strong> ${escapeHtml(doc?.document_code || '-')} - ${escapeHtml(doc?.title || '-')}
+                    </div>
+                    <div style="margin-bottom:12px;line-height:1.5;">
+                        <strong>Content/Description:</strong> ${escapeHtml(doc?.content || '-')}
                     </div>
                     <div class="table-container">
                         <table class="section-table">

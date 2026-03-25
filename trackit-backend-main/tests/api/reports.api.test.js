@@ -60,7 +60,9 @@ describe('TrackIT reports buckets for multi-recipient dissemination', () => {
   });
 
   test('created bucket shows sender and handled bucket shows recipient office', async () => {
-    const doc = await createMultiReleasedDocument(Date.now());
+    const suffix = Date.now();
+    const doc = await createMultiReleasedDocument(suffix);
+    const expectedContent = `Reports content ${suffix}`;
 
     const createdReportRes = await request(app)
       .get('/api/reports/my-office?datePreset=last7')
@@ -70,6 +72,8 @@ describe('TrackIT reports buckets for multi-recipient dissemination', () => {
       ? createdReportRes.body.created_documents
       : [];
     expect(createdDocs.some((d) => d.id === doc._id)).toBe(true);
+    const createdEntry = createdDocs.find((d) => d.id === doc._id);
+    expect(createdEntry?.content).toBe(expectedContent);
 
     const handledReportRes = await request(app)
       .get('/api/reports/my-office?datePreset=last7')
@@ -80,6 +84,7 @@ describe('TrackIT reports buckets for multi-recipient dissemination', () => {
       : [];
     const handledDoc = handledDocs.find((d) => d.id === doc._id);
     expect(handledDoc).toBeTruthy();
+    expect(handledDoc.content).toBe(expectedContent);
     const timeline = Array.isArray(handledDoc.timeline) ? handledDoc.timeline : [];
     expect(
       timeline.some((row) => String(row.status || '').toUpperCase().includes('FORWARDED BY'))
