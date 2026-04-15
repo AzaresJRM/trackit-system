@@ -40,11 +40,13 @@ router.post('/auth/password-reset-request', async (req, res) => {
 
 // Login route
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-  // #region agent log
-  fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9cc7bf'},body:JSON.stringify({sessionId:'9cc7bf',runId:'run1',hypothesisId:'H2',location:'routes/auth.js:13',message:'login route entered',data:{hasUsername:Boolean(username),usernameLength:String(username||'').length,hasPassword:Boolean(password)},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   try {
+    const { username, password } = req.body || {};
+    if (typeof fetch === 'function') {
+      // #region agent log
+      fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9cc7bf'},body:JSON.stringify({sessionId:'9cc7bf',runId:'run1',hypothesisId:'H2',location:'routes/auth.js:13',message:'login route entered',data:{hasUsername:Boolean(username),usernameLength:String(username||'').length,hasPassword:Boolean(password)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    }
     const user = await User.findOne({
       where: { username, is_active: true },
       include: [{ model: Office, as: 'office' }]
@@ -59,9 +61,11 @@ router.post('/login', async (req, res) => {
     const isPasswordValid = hasHash
       ? await bcrypt.compare(String(password || ''), dbPassword)
       : dbPassword === String(password || '');
-    // #region agent log
-    fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9cc7bf'},body:JSON.stringify({sessionId:'9cc7bf',runId:'run1',hypothesisId:'H2',location:'routes/auth.js:29',message:'login credential evaluation',data:{userFound:Boolean(user),hasHash,isPasswordValid},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
+    if (typeof fetch === 'function') {
+      // #region agent log
+      fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9cc7bf'},body:JSON.stringify({sessionId:'9cc7bf',runId:'run1',hypothesisId:'H2',location:'routes/auth.js:29',message:'login credential evaluation',data:{userFound:Boolean(user),hasHash,isPasswordValid},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    }
 
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid username or password.' });

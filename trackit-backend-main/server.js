@@ -39,7 +39,7 @@ app.use((req, res, next) => {
     '/api/admin/recent-activity',
     '/api/admin/logs/live'
   ]);
-  if (watchedPaths.has(req.path)) {
+  if (watchedPaths.has(req.path) && typeof fetch === 'function') {
     // #region agent log
     fetch('http://127.0.0.1:7507/ingest/940a8e2d-ccff-48a6-a6db-a34f92dab6b3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9cc7bf'},body:JSON.stringify({sessionId:'9cc7bf',runId:'run1',hypothesisId:'H1',location:'server.js:25',message:'watched backend route hit',data:{method:req.method,path:req.path,queryKeys:Object.keys(req.query||{})},timestamp:Date.now()})}).catch(()=>{});
     // #endregion

@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": ".cursor"
+		},
+		{
+			"path": ".github"
+		},
+		{
+			"path": "tests"
+		},
+		{
+			"path": "trackit-backend-main"
+		},
+		{
+			"path": "trackit-frontend"
+		}
+	]
+}
