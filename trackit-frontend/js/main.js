@@ -1,4 +1,17 @@
-// Firebase config (no imports needed, using CDN compat) // const firebaseConfig = { // apiKey: "AIzaSyBVBqVV1YiTmu2yCfW68jxmr3cnXx-vqX0", // authDomain: "trackit--dts.firebaseapp.com", // projectId: "trackit--dts", // storageBucket: "trackit--dts.firebasestorage.app", // messagingSenderId: "49347098537", // appId: "1:49347098537:web:47ec15ea7be0536278b6b8", // measurementId: "G-KPBJ3TSWT3" // }; // firebase.initializeApp(firebaseConfig); // const analytics = firebase.analytics(); // const db = firebase.firestore();
+// Firebase config (no imports needed, using CDN compat)
+// const firebaseConfig = {
+//   apiKey: "AIzaSyBVBqVV1YiTmu2yCfW68jxmr3cnXx-vqX0",
+//   authDomain: "trackit--dts.firebaseapp.com",
+//   projectId: "trackit--dts",
+//   storageBucket: "trackit--dts.firebasestorage.app",
+//   messagingSenderId: "49347098537",
+//   appId: "1:49347098537:web:47ec15ea7be0536278b6b8",
+//   measurementId: "G-KPBJ3TSWT3"
+// };
+
+// firebase.initializeApp(firebaseConfig);
+// const analytics = firebase.analytics();
+// const db = firebase.firestore();
 
 document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.querySelector('.login-form');
@@ -25,18 +38,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!passwordResetModal) return;
     passwordResetModal.classList.add('hidden');
     passwordResetModal.setAttribute('aria-hidden', 'true');
+
     if (passwordResetFeedback) {
       passwordResetFeedback.textContent = '';
       passwordResetFeedback.classList.remove('error');
     }
+
     if (passwordResetForm) passwordResetForm.reset();
   }
 
   function openPasswordResetModal() {
     if (!passwordResetModal) return;
+
     if (resetIdentifierInput && usernameInput && usernameInput.value.trim()) {
       resetIdentifierInput.value = usernameInput.value.trim();
     }
+
     passwordResetModal.classList.remove('hidden');
     passwordResetModal.setAttribute('aria-hidden', 'false');
   }
@@ -81,10 +98,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        await fetch(${getApiBase()}/auth/password-reset-request, {
+        await fetch(`${getApiBase()}/auth/password-reset-request`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ requested_identifier: requestedIdentifier, message })
+          body: JSON.stringify({
+            requested_identifier: requestedIdentifier,
+            message
+          })
         });
 
         if (passwordResetFeedback) {
@@ -107,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (loginForm && usernameInput && passwordInput) {
-    loginForm.addEventListener('submit', async function(event) {
+    loginForm.addEventListener('submit', async function (event) {
       event.preventDefault();
 
       const username = usernameInput.value.trim();
@@ -119,8 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        // Call backend API for login
-        const response = await fetch(${getApiBase()}/login, {
+        const response = await fetch(`${getApiBase()}/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password })
@@ -133,14 +152,12 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // Store user info (including token) for dashboard
         if (result.office_id && typeof result.office_id === 'object' && result.office_id.$oid) {
           result.office_id = result.office_id.$oid;
         }
 
         localStorage.setItem('loggedInUser', JSON.stringify(result));
 
-        // Redirect based on role (treat any admin-like account as admin)
         const role = typeof result.role === 'string' ? result.role.toLowerCase() : '';
         const isAdmin = role === 'admin' || role === 'superadmin' || result.username === 'admin';
 
@@ -159,28 +176,33 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Import the Firebase modules (if using modules, otherwise use CDN in HTML) // import { initializeApp } from 'firebase/app'; // import { getFirestore, collection, getDocs, addDoc } from 'firebase/firestore'; // Initialize Firebase // const db1 = firebase.firestore();
+// Import the Firebase modules (if using modules, otherwise use CDN in HTML)
+// import { initializeApp } from 'firebase/app';
+// import { getFirestore, collection, getDocs, addDoc } from 'firebase/firestore';
+
+// Initialize Firebase
+// const db1 = firebase.firestore();
 
 // Example: Get all users from 'users' collection
 function getAllUsers() {
   // db.collection('users').get().then((querySnapshot) => {
-  // querySnapshot.forEach((doc) => {
-  // console.log(doc.id, doc.data());
-  // });
+  //   querySnapshot.forEach((doc) => {
+  //     console.log(doc.id, doc.data());
+  //   });
   // }).catch((error) => {
-  // console.error('Error getting users:', error);
+  //   console.error('Error getting users:', error);
   // });
 }
 
 // Example: Add a new user
 // db.collection('users').add({
-// username: 'newuser',
-// is_active: 1
+//   username: 'newuser',
+//   is_active: 1
 // }).then((docRef) => {
-// console.log('User added with ID:', docRef.id);
+//   console.log('User added with ID:', docRef.id);
 // }).catch((error) => {
-// console.error('Error adding user:', error);
+//   console.error('Error adding user:', error);
 // });
 
-// Call getAllUimage.pngest
+// Call getAllUsers
 getAllUsers();
